@@ -1,0 +1,16 @@
+# ElderSphere is a SPA where everything under /family, /caretaker, /elder, /admin is an
+# authenticated dashboard (gated by ProtectedRoute) — nothing there is meaningful to a
+# crawler without a session, so only the public marketing/auth routes are left indexable.
+User-agent: *
+Allow: /$
+Allow: /login
+Allow: /login/
+Allow: /register
+Allow: /forgot-password
+Disallow: /reset-password
+Disallow: /family
+Disallow: /caretaker
+Disallow: /elder
+Disallow: /admin
+
+Sitemap: https://eldersphere.app/sitemap.xml

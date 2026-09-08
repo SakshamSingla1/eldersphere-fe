@@ -1,0 +1,40 @@
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Plus Jakarta Sans", "Nunito", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #faf7f2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Print support for booking/medical-record detail views: wrap the printable content in
+   a `.print-section` and mark anything that should never print (buttons, back links)
+   with `.no-print`. This hides everything else on the page (sidebar/topbar/nav chrome
+   included) without every layout component needing its own print-specific className. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-section,
+  .print-section * {
+    visibility: visible;
+  }
+  .print-section {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    padding: 24px;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#2F6F5E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <title>ElderSphere — Compassionate Care, Right at Home</title>
+    <meta
+      name="description"
+      content="ElderSphere connects families with verified, professional caretakers for nursing, physiotherapy, medication assistance and companion care — with medical record sharing and one-tap emergency alerts."
+    />
+    <link rel="canonical" href="https://eldersphere.app/" />
+
+    <!-- Open Graph / Facebook, LinkedIn, etc. — landing page preview when the link is shared. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://eldersphere.app/" />
+    <meta property="og:title" content="ElderSphere — Compassionate Care, Right at Home" />
+    <meta
+      property="og:description"
+      content="Connect with verified, professional caretakers for nursing, physiotherapy, medication assistance and companion care — with medical record sharing and one-tap emergency alerts."
+    />
+    <meta property="og:image" content="https://eldersphere.app/favicon.svg" />
+    <meta property="og:site_name" content="ElderSphere" />
+
+    <!-- Twitter/X card — falls back to Open Graph tags above where it doesn't have its own. -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="ElderSphere — Compassionate Care, Right at Home" />
+    <meta
+      name="twitter:description"
+      content="Connect with verified, professional caretakers for nursing, physiotherapy, medication assistance and companion care."
+    />
+    <meta name="twitter:image" content="https://eldersphere.app/favicon.svg" />
+
+    <!--
+      Branded splash — covers the genuine gap between this static HTML painting and the
+      JS bundle finishing load/parse/mount, on the app's real background color, so a slow
+      connection sees a warm branded moment instead of a blank white flash. This inline
+      script + style pair runs before any JS bundle, purely to pick the right background
+      (light vs dark) ahead of time — it mirrors ThemeModeContext's own logic (same
+      localStorage key, same matchMedia fallback) without depending on React/MUI at all.
+      main.tsx removes/fades this out itself, right after the app's first paint — this is
+      never shown again after the initial load (route changes keep their own separate,
+      unrelated fade — see RouteTransition).
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("eldersphere-theme-mode");
+          var dark = stored === "dark" || (stored !== "light" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.classList.add(dark ? "es-dark-init" : "es-light-init");
+        } catch (e) {
+          document.documentElement.classList.add("es-light-init");
+        }
+      })();
+    </script>
+    <style>
+      html.es-light-init,
+      html.es-light-init body {
+        background-color: #faf7f2;
+      }
+      html.es-dark-init,
+      html.es-dark-init body {
+        background-color: #14181a;
+      }
+      #app-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.25s ease;
+      }
+      html.es-light-init #app-splash {
+        background-color: #faf7f2;
+      }
+      html.es-dark-init #app-splash {
+        background-color: #14181a;
+      }
+      #app-splash.app-splash--hide {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #es-splash-heart {
+        stroke-dasharray: 1;
+        stroke-dashoffset: 1;
+        transform-box: fill-box;
+        transform-origin: center;
+        animation:
+          es-heart-draw 0.85s ease forwards,
+          es-heart-pulse 1.7s ease-in-out 0.85s infinite;
+      }
+      html.es-dark-init #es-splash-heart {
+        stroke: #4fa085;
+      }
+      html.es-light-init #es-splash-heart {
+        stroke: #2f6f5e;
+      }
+      @keyframes es-heart-draw {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+      @keyframes es-heart-pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.07);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #es-splash-heart {
+          animation: none;
+          stroke-dashoffset: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app-splash" aria-hidden="true">
+      <svg width="72" height="72" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          id="es-splash-heart"
+          pathLength="1"
+          d="M50 90 C 18 66, 3 44, 3 26 C 3 10, 16 1, 31 1 C 40 1, 47 6, 50 15 C 53 6, 60 1, 69 1 C 84 1, 97 10, 97 26 C 97 44, 82 66, 50 90 Z"
+          fill="none"
+          stroke-width="6"
+          stroke-linejoin="round"
+          stroke-linecap="round"
+        />
+      </svg>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
