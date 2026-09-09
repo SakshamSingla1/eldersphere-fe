@@ -5,6 +5,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import PrintIcon from "@mui/icons-material/Print";
 import RepeatIcon from "@mui/icons-material/Repeat";
+import VideoCallIcon from "@mui/icons-material/VideoCall";
 import Button from "../../../atoms/Button/Button";
 import ConfirmableButton from "../../../atoms/ConfirmableButton/ConfirmableButton";
 import Loader from "../../../atoms/Loader/Loader";
@@ -16,9 +17,10 @@ import KeyValueGrid from "../../../molecules/KeyValueGrid/KeyValueGrid";
 import { useBookingService, type BookingResponse } from "../../../../services/useBookingService";
 import { useSnackbar } from "../../../../contexts/SnackbarContext";
 import { BookingStatusEnum } from "../../../../utils/enums";
-import { formatCurrency, formatDate, getErrorMessage } from "../../../../utils/helper";
+import { formatCurrency, formatDate, getErrorMessage, getVideoCallLink } from "../../../../utils/helper";
 
 const CANCELLABLE: string[] = [BookingStatusEnum.PENDING, BookingStatusEnum.CONFIRMED];
+const VIDEO_CALL_ELIGIBLE: string[] = [BookingStatusEnum.CONFIRMED, BookingStatusEnum.IN_PROGRESS];
 
 const BookingDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -162,6 +164,15 @@ const BookingDetailPage: React.FC = () => {
         <Button variant="outline" startIcon={<PrintIcon />} onClick={() => window.print()}>
           Print / Save as PDF
         </Button>
+        {VIDEO_CALL_ELIGIBLE.includes(booking.status) && (
+          <Button
+            variant="primary"
+            startIcon={<VideoCallIcon />}
+            onClick={() => window.open(getVideoCallLink(booking.id), "_blank", "noopener,noreferrer")}
+          >
+            Start Video Call
+          </Button>
+        )}
         {CANCELLABLE.includes(booking.status) && (
           <ConfirmableButton
             variant="danger"

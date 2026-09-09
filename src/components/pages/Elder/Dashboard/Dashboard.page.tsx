@@ -5,6 +5,7 @@ import EventNoteIcon from "@mui/icons-material/EventNote";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import PersonIcon from "@mui/icons-material/Person";
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import StatCard from "../../../molecules/StatCard/StatCard";
 import EmptyState from "../../../molecules/EmptyState/EmptyState";
 import ActivityFeed from "../../../molecules/ActivityFeed/ActivityFeed";
@@ -13,29 +14,60 @@ import { NoRecordsIllustration } from "../../../atoms/Illustrations/Illustration
 import { DashboardSkeleton } from "../../../molecules/Skeletons/Skeletons";
 import { useAuthenticatedUser } from "../../../../hooks/useAuthenticatedUser";
 import { useDashboardService, type ElderDashboardSummaryDTO } from "../../../../services/useDashboardService";
+import { useInviteService } from "../../../../services/useInviteService";
 
 const ElderDashboardPage: React.FC = () => {
   const { user } = useAuthenticatedUser();
   const dashboardService = useDashboardService();
+  const inviteService = useInviteService();
   const navigate = useNavigate();
 
   const [summary, setSummary] = useState<ElderDashboardSummaryDTO | null>(null);
+  const [pendingInviteCount, setPendingInviteCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const load = () => {
+    // A brand-new elder account has no ElderProfile linked yet (one gets created by a
+    // family member, or self-service via My Profile) — the summary endpoint 404s until
+    // then, same "not set up yet" shape as every other role's dashboard, so this falls
+    // back to null rather than leaving an unhandled rejection that blanks the page.
+    // Pending invites are fetched independently since they matter most in exactly this
+    // no-profile-yet state (a family member inviting this account to become the elder).
     dashboardService
       .getElderSummary()
-      // A brand-new elder account has no ElderProfile linked yet (one gets created by a
-      // family member, or self-service via My Profile) — the summary endpoint 404s until
-      // then, same "not set up yet" shape as every other role's dashboard, so this falls
-      // back to null rather than leaving an unhandled rejection that blanks the page.
       .then(setSummary)
-      .catch(() => setSummary(null))
+      .catch(() => setSummary(null));
+    inviteService
+      .myInvites()
+      .then((invites) => setPendingInviteCount(invites.length))
+      .catch(() => setPendingInviteCount(0))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) return <DashboardSkeleton statCount={3} rowCount={2} />;
+
+  const pendingInviteBanner = pendingInviteCount > 0 && (
+    <Card sx={{ mb: 3, borderLeft: "4px solid", borderColor: "warning.main" }}>
+      <CardContent>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Stack direction="row" spacing={1} alignItems="center">
+            <MailOutlineIcon color="warning" />
+            <Typography variant="body1" fontWeight={700}>
+              {pendingInviteCount === 1 ? "You have 1 pending family link invite" : `You have ${pendingInviteCount} pending family link invites`}
+            </Typography>
+          </Stack>
+          <Button variant="primary" size="small" onClick={() => navigate("/elder/invites")}>
+            Review
+          </Button>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
 
   if (!summary) {
     return (
@@ -46,6 +78,7 @@ const ElderDashboardPage: React.FC = () => {
         <Typography color="text.secondary" mb={3}>
           Here's an overview of your care and wellbeing.
         </Typography>
+        {pendingInviteBanner}
         <Card>
           <CardContent sx={{ textAlign: "center", py: 6 }}>
             <PersonIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1 }} />
@@ -72,6 +105,8 @@ const ElderDashboardPage: React.FC = () => {
       <Typography color="text.secondary" mb={3}>
         Here's an overview of your care and wellbeing.
       </Typography>
+
+      {pendingInviteBanner}
 
       <Grid id="dashboard-stat-cards" container spacing={2} mb={3}>
         <Grid size={{ xs: 12, sm: 4 }}>

@@ -32,6 +32,9 @@ const TYPE_LABELS: Record<NotificationTypeEnum, string> = {
   [NotificationTypeEnum.EMERGENCY_ALERT]: "Emergency Alert",
   [NotificationTypeEnum.NEW_MESSAGE]: "New Message",
   [NotificationTypeEnum.GENERAL]: "General",
+  [NotificationTypeEnum.ELDER_LINK_INVITE]: "Family Link Invite",
+  [NotificationTypeEnum.ELDER_LINK_ACCEPTED]: "Family Link Accepted",
+  [NotificationTypeEnum.ELDER_LINK_DECLINED]: "Family Link Declined",
 };
 
 const CHANNELS: { key: keyof NotificationPreferenceDTO; label: string }[] = [

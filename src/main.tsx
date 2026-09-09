@@ -5,6 +5,7 @@ import { MotionConfig } from "framer-motion";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { registerSW } from "virtual:pwa-register";
+import * as Sentry from "@sentry/react";
 import "./index.css";
 import App from "./App";
 import { ThemeModeProvider } from "./contexts/ThemeModeContext";
@@ -12,6 +13,14 @@ import { AuthenticatedUserProvider } from "./contexts/AuthenticatedUserContext";
 import { SnackbarProvider } from "./contexts/SnackbarContext";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import ErrorBoundary from "./components/atoms/ErrorBoundary/ErrorBoundary";
+
+// Free-tier error tracking - a complete no-op until VITE_SENTRY_DSN is set (see .env.example),
+// so this is safe to ship even before anyone has created a Sentry account. tracesSampleRate
+// is 0 (no performance monitoring) to stay comfortably inside the free plan's event quota.
+const sentryDsn = import.meta.env.VITE_SENTRY_DSN as string | undefined;
+if (sentryDsn) {
+  Sentry.init({ dsn: sentryDsn, environment: import.meta.env.MODE, tracesSampleRate: 0 });
+}
 
 // Registers the vite-plugin-pwa-generated service worker (app-shell precache + the
 // offline-fallback runtime route, see vite.config.ts). `registerType: "autoUpdate"` means

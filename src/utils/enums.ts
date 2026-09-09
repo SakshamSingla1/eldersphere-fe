@@ -87,8 +87,19 @@ export const NotificationTypeEnum = {
   EMERGENCY_ALERT: "EMERGENCY_ALERT",
   NEW_MESSAGE: "NEW_MESSAGE",
   GENERAL: "GENERAL",
+  ELDER_LINK_INVITE: "ELDER_LINK_INVITE",
+  ELDER_LINK_ACCEPTED: "ELDER_LINK_ACCEPTED",
+  ELDER_LINK_DECLINED: "ELDER_LINK_DECLINED",
 } as const;
 export type NotificationTypeEnum = (typeof NotificationTypeEnum)[keyof typeof NotificationTypeEnum];
+
+export const LinkInviteStatusEnum = {
+  PENDING: "PENDING",
+  ACCEPTED: "ACCEPTED",
+  DECLINED: "DECLINED",
+  REVOKED: "REVOKED",
+} as const;
+export type LinkInviteStatusEnum = (typeof LinkInviteStatusEnum)[keyof typeof LinkInviteStatusEnum];
 
 export const RoleStatusEnum = {
   ACTIVE: "ACTIVE",

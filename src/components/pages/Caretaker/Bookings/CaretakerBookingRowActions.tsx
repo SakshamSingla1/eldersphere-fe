@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
+import VideoCallIcon from "@mui/icons-material/VideoCall";
 import Button from "../../../atoms/Button/Button";
 import ConfirmableButton from "../../../atoms/ConfirmableButton/ConfirmableButton";
 import { useBookingService, type BookingResponse } from "../../../../services/useBookingService";
 import { useMessagingService } from "../../../../services/useMessagingService";
 import { BookingStatusEnum } from "../../../../utils/enums";
 import { useSnackbar } from "../../../../contexts/SnackbarContext";
-import { getErrorMessage } from "../../../../utils/helper";
+import { getErrorMessage, getVideoCallLink } from "../../../../utils/helper";
+
+const VIDEO_CALL_ELIGIBLE: string[] = [BookingStatusEnum.CONFIRMED, BookingStatusEnum.IN_PROGRESS];
 
 const NEXT_ACTION: Record<string, { label: string; next: string; color?: "error" }[]> = {
   PENDING: [
@@ -62,6 +65,19 @@ const CaretakerBookingRowActions: React.FC<{ booking: BookingResponse; reload: (
       <Button variant="text" size="small" startIcon={<ChatBubbleOutlineIcon fontSize="small" />} loading={messaging} onClick={handleMessage}>
         Message
       </Button>
+      {VIDEO_CALL_ELIGIBLE.includes(booking.status) && (
+        <Button
+          variant="text"
+          size="small"
+          startIcon={<VideoCallIcon fontSize="small" />}
+          onClick={(e) => {
+            e.stopPropagation();
+            window.open(getVideoCallLink(booking.id), "_blank", "noopener,noreferrer");
+          }}
+        >
+          Video Call
+        </Button>
+      )}
       {actions.map((action) =>
         action.next === BookingStatusEnum.CANCELLED ? (
           <ConfirmableButton

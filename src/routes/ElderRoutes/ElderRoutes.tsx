@@ -7,6 +7,7 @@ import FolderSharedIcon from "@mui/icons-material/FolderShared";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import SettingsIcon from "@mui/icons-material/Settings";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import Loader from "../../components/atoms/Loader/Loader";
@@ -18,6 +19,7 @@ const ElderMyProfilePage = lazy(() => import("../../components/pages/Elder/MyPro
 const ElderBookingsPage = lazy(() => import("../../components/pages/Elder/Bookings/Bookings.page"));
 const ElderMedicalRecordsPage = lazy(() => import("../../components/pages/Elder/MedicalRecords/MedicalRecords.page"));
 const ElderEmergencyPage = lazy(() => import("../../components/pages/Elder/Emergency/Emergency.page"));
+const ElderInvitesPage = lazy(() => import("../../components/pages/Elder/Invites/Invites.page"));
 const NotificationsPage = lazy(() => import("../../components/pages/Shared/Notifications.page"));
 const MessagesPage = lazy(() => import("../../components/pages/Shared/Messages.page"));
 const AccountSettingsPage = lazy(() => import("../../components/pages/Shared/AccountSettings.page"));
@@ -27,6 +29,7 @@ const NAV_ITEMS: SidebarNavItem[] = [
   { label: "My Profile", path: "/elder/profile", icon: <PersonIcon /> },
   { label: "My Bookings", path: "/elder/bookings", icon: <EventNoteIcon /> },
   { label: "Medical Records", path: "/elder/medical-records", icon: <FolderSharedIcon /> },
+  { label: "Invites", path: "/elder/invites", icon: <MailOutlineIcon /> },
   { label: "Messages", path: "/elder/messages", icon: <ChatBubbleOutlineIcon /> },
   { label: "Emergency", path: "/elder/emergency", icon: <WarningAmberIcon /> },
   { label: "Notifications", path: "/elder/notifications", icon: <NotificationsIcon /> },
@@ -42,6 +45,7 @@ const ElderRoutes: React.FC = () => (
         <Route path="profile" element={<ElderMyProfilePage />} />
         <Route path="bookings" element={<ElderBookingsPage />} />
         <Route path="medical-records" element={<ElderMedicalRecordsPage />} />
+        <Route path="invites" element={<ElderInvitesPage />} />
         <Route path="messages" element={<MessagesPage />} />
         <Route path="emergency" element={<ElderEmergencyPage />} />
         <Route path="notifications" element={<NotificationsPage />} />

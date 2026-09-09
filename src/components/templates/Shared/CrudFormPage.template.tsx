@@ -12,6 +12,7 @@ import Select, { type SelectOption } from "../../atoms/Select/Select";
 import Checkbox from "../../atoms/Checkbox/Checkbox";
 import ErrorMessage from "../../atoms/ErrorMessage/ErrorMessage";
 import FieldError from "../../atoms/FieldError/FieldError";
+import AddressAutocomplete from "../../molecules/AddressAutocomplete/AddressAutocomplete";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
 import { useFileService } from "../../../services/useFileService";
 import { getErrorMessage } from "../../../utils/helper";
@@ -20,7 +21,8 @@ import type { ResourceTypeEnum } from "../../../utils/enums";
 export interface CrudFieldConfig {
   name: string;
   label: string;
-  type?: "text" | "number" | "select" | "checkbox" | "textarea" | "date" | "file";
+  /** "address" renders a free OpenStreetMap-backed autocomplete (see AddressAutocomplete) instead of a plain text field. */
+  type?: "text" | "number" | "select" | "checkbox" | "textarea" | "date" | "file" | "address";
   options?: SelectOption[];
   required?: boolean;
   gridSize?: number; // out of 12, defaults to 12
@@ -258,6 +260,16 @@ function CrudFormPage<T>({
             error={Boolean(fieldError)}
             helperText={fieldHelperText(field, fieldError)}
             onChange={(e) => handleFieldChange(field.name, e.target.value)}
+          />
+        );
+      case "address":
+        return (
+          <AddressAutocomplete
+            label={field.label}
+            value={value}
+            required={field.required}
+            helperText={fieldHelperText(field, fieldError)}
+            onChange={(newValue) => handleFieldChange(field.name, newValue)}
           />
         );
       case "number":

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Dialog, DialogContent, Typography } from "@mui/material";
+import { Dialog, DialogContent, Typography, Stack } from "@mui/material";
 import EventNoteIcon from "@mui/icons-material/EventNote";
+import VideoCallIcon from "@mui/icons-material/VideoCall";
 import CrudModule from "../../../templates/Shared/CrudModule.template";
 import type { TableColumn } from "../../../organisms/Table/TableV1";
 import Button from "../../../atoms/Button/Button";
@@ -10,7 +11,10 @@ import { BOOKING_STATUS_TONE } from "../../../atoms/Chip/statusTones";
 import KeyValueGrid from "../../../molecules/KeyValueGrid/KeyValueGrid";
 import { useBookingService, type BookingResponse } from "../../../../services/useBookingService";
 import { useElderProfileService } from "../../../../services/useElderProfileService";
-import { formatCurrency, formatDate, formatDateTime, paginateClientSide } from "../../../../utils/helper";
+import { BookingStatusEnum } from "../../../../utils/enums";
+import { formatCurrency, formatDate, formatDateTime, getVideoCallLink, paginateClientSide } from "../../../../utils/helper";
+
+const VIDEO_CALL_ELIGIBLE: string[] = [BookingStatusEnum.CONFIRMED, BookingStatusEnum.IN_PROGRESS];
 
 // The booking search endpoint only filters by familyUserId/caretakerId/status (no
 // elderProfileId or elderUserId param exists on the backend), so — same spirit as
@@ -93,9 +97,21 @@ const ElderBookingsPage: React.FC = () => {
                 { label: "Created", value: formatDateTime(viewing.createdAt) },
               ]}
             />
-            <Button variant="text" onClick={() => setViewing(null)} sx={{ mt: 2 }}>
-              Close
-            </Button>
+            <Stack direction="row" spacing={1.5} mt={2}>
+              {VIDEO_CALL_ELIGIBLE.includes(viewing.status) && (
+                <Button
+                  variant="primary"
+                  size="small"
+                  startIcon={<VideoCallIcon />}
+                  onClick={() => window.open(getVideoCallLink(viewing.id), "_blank", "noopener,noreferrer")}
+                >
+                  Start Video Call
+                </Button>
+              )}
+              <Button variant="text" onClick={() => setViewing(null)}>
+                Close
+              </Button>
+            </Stack>
           </DialogContent>
         )}
       </Dialog>

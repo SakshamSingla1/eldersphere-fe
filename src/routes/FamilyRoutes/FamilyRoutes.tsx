@@ -10,6 +10,7 @@ import RateReviewIcon from "@mui/icons-material/RateReview";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import SettingsIcon from "@mui/icons-material/Settings";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import Loader from "../../components/atoms/Loader/Loader";
@@ -19,6 +20,8 @@ import type { SidebarNavItem } from "../../components/molecules/Sidebar/Sidebar"
 const FamilyDashboardPage = lazy(() => import("../../components/pages/Family/Dashboard/Dashboard.page"));
 const ElderProfilesPage = lazy(() => import("../../components/pages/Family/ElderProfiles/ElderProfiles.page"));
 const ElderProfilesFormPage = lazy(() => import("../../components/pages/Family/ElderProfiles/ElderProfilesForm.page"));
+const LinkElderProfilePage = lazy(() => import("../../components/pages/Family/ElderProfiles/LinkElderProfile.page"));
+const FamilyInvitesPage = lazy(() => import("../../components/pages/Family/Invites/Invites.page"));
 const CaretakerSearchPage = lazy(() => import("../../components/pages/Family/CaretakerSearch/CaretakerSearch.page"));
 const CaretakerProfileViewPage = lazy(() => import("../../components/pages/Family/CaretakerSearch/CaretakerProfileView.page"));
 const FavoritesPage = lazy(() => import("../../components/pages/Family/Favorites/Favorites.page"));
@@ -36,6 +39,7 @@ const AccountSettingsPage = lazy(() => import("../../components/pages/Shared/Acc
 const NAV_ITEMS: SidebarNavItem[] = [
   { label: "Dashboard", path: "/family/dashboard", icon: <DashboardIcon /> },
   { label: "Elder Profiles", path: "/family/elder-profiles", icon: <PeopleIcon /> },
+  { label: "Invites", path: "/family/invites", icon: <MailOutlineIcon /> },
   { label: "Find a Caretaker", path: "/family/caretakers", icon: <SearchIcon /> },
   { label: "My Favorites", path: "/family/favorites", icon: <FavoriteIcon /> },
   { label: "My Bookings", path: "/family/bookings", icon: <EventNoteIcon /> },
@@ -56,6 +60,8 @@ const FamilyRoutes: React.FC = () => (
         <Route path="elder-profiles" element={<ElderProfilesPage />} />
         <Route path="elder-profiles/new" element={<ElderProfilesFormPage />} />
         <Route path="elder-profiles/:id/edit" element={<ElderProfilesFormPage />} />
+        <Route path="elder-profiles/link" element={<LinkElderProfilePage />} />
+        <Route path="invites" element={<FamilyInvitesPage />} />
         <Route path="caretakers" element={<CaretakerSearchPage />} />
         <Route path="caretakers/:id" element={<CaretakerProfileViewPage />} />
         <Route path="favorites" element={<FavoritesPage />} />

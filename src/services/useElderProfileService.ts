@@ -33,6 +33,13 @@ export interface ElderProfilePayload {
   emergencyContactPhone?: string;
 }
 
+export interface FamilyMemberSummaryDTO {
+  userId: number;
+  fullName?: string;
+  relationshipLabel?: string;
+  isOwner: boolean;
+}
+
 export const useElderProfileService = () => {
   return useMemo(
     () => ({

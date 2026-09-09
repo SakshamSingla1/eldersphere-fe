@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Typography, Stack } from "@mui/material";
 import { motion } from "framer-motion";
+import * as Sentry from "@sentry/react";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import Button from "../Button/Button";
@@ -71,6 +72,8 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   componentDidCatch(error: unknown, errorInfo: React.ErrorInfo): void {
     // eslint-disable-next-line no-console
     console.error("Unhandled error caught by ErrorBoundary:", error, errorInfo);
+    // No-op when Sentry.init() was never called (no VITE_SENTRY_DSN configured — see main.tsx).
+    Sentry.captureException(error, { extra: { componentStack: errorInfo.componentStack } });
   }
 
   handleReload = (): void => {

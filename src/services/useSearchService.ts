@@ -1,9 +1,18 @@
 import { useMemo } from "react";
 import { request } from ".";
 import type { PageResponse } from "../utils/types";
-import type { CaretakerVerificationStatusEnum, ServiceCategoryEnum } from "../utils/enums";
+import type { CaretakerVerificationStatusEnum, ServiceCategoryEnum, UserTypeEnum } from "../utils/enums";
 
 const SEARCH_CARETAKERS_URL = "/search/caretakers";
+const SEARCH_USERS_URL = "/search/users";
+
+export interface UserLinkSearchResultDTO {
+  id: number;
+  fullName: string;
+  maskedEmail?: string;
+  maskedPhone?: string;
+  userType: UserTypeEnum;
+}
 
 export interface CaretakerSearchResultDTO {
   id: number;
@@ -36,6 +45,8 @@ export const useSearchService = () => {
     () => ({
       searchCaretakers: (params: CaretakerSearchParams) =>
         request<PageResponse<CaretakerSearchResultDTO>>("GET", SEARCH_CARETAKERS_URL, null, { params }),
+      searchUsers: (query: string, userType?: UserTypeEnum) =>
+        request<UserLinkSearchResultDTO[]>("GET", SEARCH_USERS_URL, null, { params: { query, userType } }),
     }),
     []
   );

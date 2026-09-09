@@ -6,6 +6,7 @@ import EventNoteIcon from "@mui/icons-material/EventNote";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import SearchIcon from "@mui/icons-material/Search";
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import StatCard from "../../../molecules/StatCard/StatCard";
 import EmptyState from "../../../molecules/EmptyState/EmptyState";
 import StatusChip from "../../../atoms/Chip/StatusChip";
@@ -18,19 +19,24 @@ import GettingStartedChecklist from "../../../molecules/GettingStartedChecklist/
 import { useAuthenticatedUser } from "../../../../hooks/useAuthenticatedUser";
 import { useBookingService, type BookingResponse } from "../../../../services/useBookingService";
 import { useDashboardService, type FamilyDashboardSummaryDTO } from "../../../../services/useDashboardService";
-import { formatDate } from "../../../../utils/helper";
+import { useInviteService } from "../../../../services/useInviteService";
+import { useSnackbar } from "../../../../contexts/SnackbarContext";
+import { formatDate, getErrorMessage } from "../../../../utils/helper";
 
 const FamilyDashboardPage: React.FC = () => {
   const { user } = useAuthenticatedUser();
   const bookingService = useBookingService();
   const dashboardService = useDashboardService();
+  const inviteService = useInviteService();
+  const { showSnackbar } = useSnackbar();
   const navigate = useNavigate();
 
   const [summary, setSummary] = useState<FamilyDashboardSummaryDTO | null>(null);
   const [upcoming, setUpcoming] = useState<BookingResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [respondingInviteId, setRespondingInviteId] = useState<number | null>(null);
 
-  useEffect(() => {
+  const loadSummary = () => {
     if (!user) return;
     Promise.all([
       dashboardService.getFamilySummary(),
@@ -41,8 +47,24 @@ const FamilyDashboardPage: React.FC = () => {
         setUpcoming(bookings.content);
       })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadSummary();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  const respondToInvite = async (inviteId: number, action: "accept" | "decline") => {
+    setRespondingInviteId(inviteId);
+    try {
+      await (action === "accept" ? inviteService.accept(inviteId) : inviteService.decline(inviteId));
+      loadSummary();
+    } catch (err) {
+      showSnackbar("error", getErrorMessage(err, "Failed to respond to invite"));
+    } finally {
+      setRespondingInviteId(null);
+    }
+  };
 
   if (loading || !summary) return <DashboardSkeleton statCount={3} rowCount={3} />;
 
@@ -79,6 +101,72 @@ const FamilyDashboardPage: React.FC = () => {
             { label: "Book your first visit", done: false },
           ]}
         />
+      )}
+
+      {summary.managedElderCount > 0 && summary.coManagedElderCount === 0 && (
+        <GettingStartedChecklist
+          title="Share the care"
+          description="Invite another family member to help manage your elder's care."
+          steps={[
+            {
+              label: "Invite a family member",
+              done: false,
+              actionLabel: "Invite Family Member",
+              onAction: () => navigate("/family/elder-profiles"),
+            },
+          ]}
+        />
+      )}
+
+      {summary.pendingInvites.length > 0 && (
+        <Card sx={{ mb: 3, borderLeft: "4px solid", borderColor: "warning.main" }}>
+          <CardContent>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <MailOutlineIcon color="warning" />
+                <Typography variant="h6" fontWeight={700}>
+                  Pending Invites
+                </Typography>
+              </Stack>
+              <Button variant="text" onClick={() => navigate("/family/invites")}>
+                View all
+              </Button>
+            </Stack>
+            <List>
+              {summary.pendingInvites.map((invite) => (
+                <ListItem
+                  key={invite.id}
+                  divider
+                  secondaryAction={
+                    <Stack direction="row" spacing={1}>
+                      <Button
+                        variant="primary"
+                        size="small"
+                        loading={respondingInviteId === invite.id}
+                        onClick={() => respondToInvite(invite.id, "accept")}
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="small"
+                        disabled={respondingInviteId === invite.id}
+                        onClick={() => respondToInvite(invite.id, "decline")}
+                      >
+                        Decline
+                      </Button>
+                    </Stack>
+                  }
+                >
+                  <ListItemText
+                    primary={invite.elderName ?? "Elder profile"}
+                    secondary={`Invited by ${invite.invitedByName ?? "a family member"}${invite.relationshipLabel ? ` · ${invite.relationshipLabel}` : ""}`}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </CardContent>
+        </Card>
       )}
 
       <Grid id="dashboard-stat-cards" container spacing={2} mb={3}>

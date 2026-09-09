@@ -72,6 +72,7 @@ const FamilyEmergencyPage: React.FC = () => {
     { key: "triggeredAt", label: "Triggered At", render: (r) => formatDateTime(r.triggeredAt) },
     { key: "resolvedAt", label: "Resolved At", render: (r) => formatDateTime(r.resolvedAt) },
     { key: "responseTime", label: "Response Time", render: (r) => (r.responseTimeSeconds ? `${r.responseTimeSeconds}s` : "—") },
+    { key: "location", label: "Location", render: (r) => r.resolvedAddress || "—" },
   ];
 
   const fetchPage = useCallback(

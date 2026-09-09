@@ -42,6 +42,13 @@ export const formatCurrency = (value?: number | string | null): string => {
   return `₹${num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
+// Free video calling, no account or API key needed — meet.jit.si rooms are created
+// on-the-fly just by visiting the URL. One deterministic room per booking so every
+// participant (family, caretaker, elder) who opens this link for the same booking lands
+// in the same room. Not cryptographically unguessable, but fine for this app's threat
+// model (a booking id alone isn't public/discoverable by anyone outside its participants).
+export const getVideoCallLink = (bookingId: number): string => `https://meet.jit.si/ElderSphere-Booking-${bookingId}`;
+
 export const getInitials = (name?: string | null): string => {
   if (!name) return "?";
   return name
