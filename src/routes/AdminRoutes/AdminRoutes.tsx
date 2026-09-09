@@ -41,6 +41,21 @@ const AdminRolesPermissionsPage = lazy(() => import("../../components/pages/Admi
 const AdminPlatformSettingsPage = lazy(() => import("../../components/pages/Admin/PlatformSettings.page"));
 const AccountSettingsPage = lazy(() => import("../../components/pages/Shared/AccountSettings.page"));
 
+// Add/Edit form PAGES for the CrudModule-based listings above — each its own lazy chunk,
+// same rationale as the listing pages themselves. See CrudFormPage.template.tsx.
+const AdminUserFormPage = lazy(() => import("../../components/pages/Admin/UsersForm.page"));
+const AdminServiceFormPage = lazy(() => import("../../components/pages/Admin/ServicesForm.page"));
+const AdminBookingFormPage = lazy(() => import("../../components/pages/Admin/BookingsForm.page"));
+const AdminMedicalRecordFormPage = lazy(() => import("../../components/pages/Admin/MedicalRecordsForm.page"));
+const AdminContactUsFormPage = lazy(() => import("../../components/pages/Admin/ContactUsForm.page"));
+const AdminCaretakerVerificationFormPage = lazy(() => import("../../components/pages/Admin/CaretakerVerificationForm.page"));
+const AdminEmergencyAlertFormPage = lazy(() => import("../../components/pages/Admin/EmergencyAlertsForm.page"));
+const AdminRoleFormPage = lazy(() => import("../../components/pages/Admin/RoleForm.page"));
+const AdminPermissionFormPage = lazy(() => import("../../components/pages/Admin/PermissionForm.page"));
+const AdminLandingFeatureFormPage = lazy(() => import("../../components/pages/Admin/LandingFeatureForm.page"));
+const AdminLandingFaqFormPage = lazy(() => import("../../components/pages/Admin/LandingFaqForm.page"));
+const AdminLandingTestimonialFormPage = lazy(() => import("../../components/pages/Admin/LandingTestimonialForm.page"));
+
 // Roles & Permissions and Platform Settings are gated to SUPER_ADMIN on the backend
 // (RoleController / PermissionController / PlatformSettingsController all require
 // hasRole('SUPER_ADMIN'), which the role hierarchy does NOT widen from ADMIN) — a plain
@@ -89,21 +104,60 @@ const AdminRoutes: React.FC = () => {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboardPage />} />
           <Route path="users" element={<AdminUsersPage />} />
+          <Route path="users/new" element={<AdminUserFormPage />} />
+          <Route path="users/:id/edit" element={<AdminUserFormPage />} />
           <Route path="caretaker-verification" element={<AdminCaretakerVerificationPage />} />
+          <Route path="caretaker-verification/:id/edit" element={<AdminCaretakerVerificationFormPage />} />
           <Route path="elder-profiles" element={<AdminElderProfilesPage />} />
           <Route path="services" element={<AdminServicesPage />} />
+          <Route path="services/new" element={<AdminServiceFormPage />} />
+          <Route path="services/:id/edit" element={<AdminServiceFormPage />} />
           <Route path="bookings" element={<AdminBookingsPage />} />
+          <Route path="bookings/:id/edit" element={<AdminBookingFormPage />} />
           <Route path="medical-records" element={<AdminMedicalRecordsPage />} />
+          <Route path="medical-records/:id/edit" element={<AdminMedicalRecordFormPage />} />
           <Route path="reviews" element={<AdminReviewsPage />} />
           <Route path="emergency-alerts" element={<AdminEmergencyAlertsPage />} />
+          <Route path="emergency-alerts/:id/edit" element={<AdminEmergencyAlertFormPage />} />
           <Route path="analytics" element={<AdminAnalyticsPage />} />
           <Route path="landing-management" element={<AdminLandingManagementPage />} />
+          <Route path="landing-management/features/new" element={<AdminLandingFeatureFormPage />} />
+          <Route path="landing-management/features/:id/edit" element={<AdminLandingFeatureFormPage />} />
+          <Route path="landing-management/faqs/new" element={<AdminLandingFaqFormPage />} />
+          <Route path="landing-management/faqs/:id/edit" element={<AdminLandingFaqFormPage />} />
+          <Route path="landing-management/testimonials/new" element={<AdminLandingTestimonialFormPage />} />
+          <Route path="landing-management/testimonials/:id/edit" element={<AdminLandingTestimonialFormPage />} />
           <Route path="contact-us" element={<AdminContactUsPage />} />
+          <Route path="contact-us/:id/edit" element={<AdminContactUsFormPage />} />
           <Route
             path="roles-permissions"
             element={
               <ProtectedRoute allowedUserTypes={[UserTypeEnum.SUPER_ADMIN]}>
                 <AdminRolesPermissionsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="roles-permissions/roles/new"
+            element={
+              <ProtectedRoute allowedUserTypes={[UserTypeEnum.SUPER_ADMIN]}>
+                <AdminRoleFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="roles-permissions/roles/:id/edit"
+            element={
+              <ProtectedRoute allowedUserTypes={[UserTypeEnum.SUPER_ADMIN]}>
+                <AdminRoleFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="roles-permissions/permissions/new"
+            element={
+              <ProtectedRoute allowedUserTypes={[UserTypeEnum.SUPER_ADMIN]}>
+                <AdminPermissionFormPage />
               </ProtectedRoute>
             }
           />

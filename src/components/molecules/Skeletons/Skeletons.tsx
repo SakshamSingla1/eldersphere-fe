@@ -76,6 +76,19 @@ export const CardGridSkeleton: React.FC<{ count?: number }> = ({ count = 6 }) =>
   </Grid>
 );
 
+/** Add/Edit form-page skeleton — mirrors a label+input row per field while the record
+ * being edited loads (see CrudFormPage.template.tsx). */
+export const FormFieldsSkeleton: React.FC<{ count?: number }> = ({ count = 4 }) => (
+  <Stack spacing={2.5}>
+    {Array.from({ length: count }).map((_, i) => (
+      <Box key={i}>
+        <Skeleton variant="text" width={120} height={20} sx={{ mb: 0.5 }} />
+        <Skeleton variant="rounded" width="100%" height={44} sx={{ borderRadius: "10px" }} />
+      </Box>
+    ))}
+  </Stack>
+);
+
 /** Profile-page skeleton — an avatar/photo card beside a details-form-shaped card. */
 export const ProfileSkeleton: React.FC = () => (
   <Grid container spacing={3}>

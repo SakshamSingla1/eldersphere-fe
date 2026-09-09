@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import FolderSharedIcon from "@mui/icons-material/FolderShared";
 import CrudModule from "../../../templates/Shared/CrudModule.template";
 import type { TableColumn } from "../../../organisms/Table/TableV1";
@@ -7,11 +7,11 @@ import Select from "../../../atoms/Select/Select";
 import { NoRecordsIllustration } from "../../../atoms/Illustrations/Illustrations";
 import { useMedicalRecordService, type MedicalRecordResponse } from "../../../../services/useMedicalRecordService";
 import { useElderProfileService, type ElderProfileResponse } from "../../../../services/useElderProfileService";
-import { MedicalRecordTypeEnum, enumToOptions } from "../../../../utils/enums";
 import { formatDateTime } from "../../../../utils/helper";
 
 const FamilyMedicalRecordsPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const medicalRecordService = useMedicalRecordService();
   const elderProfileService = useElderProfileService();
   const [elders, setElders] = useState<ElderProfileResponse[]>([]);
@@ -20,7 +20,12 @@ const FamilyMedicalRecordsPage: React.FC = () => {
   useEffect(() => {
     elderProfileService.getMine().then((list) => {
       setElders(list);
-      if (list.length > 0) setSelectedElder(list[0].id);
+      // Returning here from the Add page (see MedicalRecordsForm.page.tsx, which passes
+      // `?elderId=` back through as part of its backPath) should keep the same elder
+      // selected rather than resetting to the first one in the list.
+      const fromUrl = Number(searchParams.get("elderId"));
+      if (fromUrl && list.some((e) => e.id === fromUrl)) setSelectedElder(fromUrl);
+      else if (list.length > 0) setSelectedElder(list[0].id);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -75,14 +80,8 @@ const FamilyMedicalRecordsPage: React.FC = () => {
           onChange={(e) => setSelectedElder(Number(e.target.value))}
         />
       }
-      fields={[
-        { name: "type", label: "Type", type: "select", required: true, options: enumToOptions(MedicalRecordTypeEnum) },
-        { name: "title", label: "Title", required: true },
-        { name: "notes", label: "Notes", type: "textarea" },
-        { name: "document", label: "Attach Document", type: "file", resourceType: "MEDICAL_RECORD_DOCUMENT" as any },
-        { name: "sharedWithFamily", label: "Shared with family", type: "checkbox" },
-      ]}
-      initialValues={{ sharedWithFamily: true }}
+      basePath="/family/medical-records"
+      extraQuery={selectedElder ? `elderId=${selectedElder}` : undefined}
       onCreate={
         selectedElder
           ? async (values) => {

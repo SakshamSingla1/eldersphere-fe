@@ -18,12 +18,14 @@ import type { SidebarNavItem } from "../../components/molecules/Sidebar/Sidebar"
 // Lazy per-page chunks — see AdminRoutes.tsx for rationale.
 const FamilyDashboardPage = lazy(() => import("../../components/pages/Family/Dashboard/Dashboard.page"));
 const ElderProfilesPage = lazy(() => import("../../components/pages/Family/ElderProfiles/ElderProfiles.page"));
+const ElderProfilesFormPage = lazy(() => import("../../components/pages/Family/ElderProfiles/ElderProfilesForm.page"));
 const CaretakerSearchPage = lazy(() => import("../../components/pages/Family/CaretakerSearch/CaretakerSearch.page"));
 const CaretakerProfileViewPage = lazy(() => import("../../components/pages/Family/CaretakerSearch/CaretakerProfileView.page"));
 const FavoritesPage = lazy(() => import("../../components/pages/Family/Favorites/Favorites.page"));
 const FamilyBookingsPage = lazy(() => import("../../components/pages/Family/Bookings/Bookings.page"));
 const BookingDetailPage = lazy(() => import("../../components/pages/Family/Bookings/BookingDetail.page"));
 const FamilyMedicalRecordsPage = lazy(() => import("../../components/pages/Family/MedicalRecords/MedicalRecords.page"));
+const FamilyMedicalRecordFormPage = lazy(() => import("../../components/pages/Family/MedicalRecords/MedicalRecordsForm.page"));
 const MedicalRecordDetailPage = lazy(() => import("../../components/pages/Family/MedicalRecords/MedicalRecordDetail.page"));
 const FamilyReviewsPage = lazy(() => import("../../components/pages/Family/Reviews/Reviews.page"));
 const FamilyEmergencyPage = lazy(() => import("../../components/pages/Family/Emergency/Emergency.page"));
@@ -52,12 +54,15 @@ const FamilyRoutes: React.FC = () => (
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<FamilyDashboardPage />} />
         <Route path="elder-profiles" element={<ElderProfilesPage />} />
+        <Route path="elder-profiles/new" element={<ElderProfilesFormPage />} />
+        <Route path="elder-profiles/:id/edit" element={<ElderProfilesFormPage />} />
         <Route path="caretakers" element={<CaretakerSearchPage />} />
         <Route path="caretakers/:id" element={<CaretakerProfileViewPage />} />
         <Route path="favorites" element={<FavoritesPage />} />
         <Route path="bookings" element={<FamilyBookingsPage />} />
         <Route path="bookings/:id" element={<BookingDetailPage />} />
         <Route path="medical-records" element={<FamilyMedicalRecordsPage />} />
+        <Route path="medical-records/new" element={<FamilyMedicalRecordFormPage />} />
         <Route path="medical-records/:id" element={<MedicalRecordDetailPage />} />
         <Route path="reviews" element={<FamilyReviewsPage />} />
         <Route path="messages" element={<MessagesPage />} />

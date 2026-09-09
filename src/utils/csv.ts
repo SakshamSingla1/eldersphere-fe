@@ -3,11 +3,11 @@
 // leaderboard/timeseries, etc). Rows are already plain objects from a REST response.
 export interface CsvColumn<T> {
   header: string;
-  accessor: (row: T) => string | number | null | null;
+  accessor: (row: T) => string | number | null | undefined;
 }
 
-const escapeCsvCell = (value: string | number | null | null): string => {
-  const str = value === null || value === null ? "" : String(value);
+const escapeCsvCell = (value: string | number | null | undefined): string => {
+  const str = value === null || value === undefined ? "" : String(value);
   if (/[",\n]/.test(str)) {
     return `"${str.replace(/"/g, '""')}"`;
   }

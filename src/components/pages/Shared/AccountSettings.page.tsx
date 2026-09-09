@@ -6,6 +6,7 @@ import TextField from "../../atoms/TextField/TextField";
 import Button from "../../atoms/Button/Button";
 import ErrorMessage from "../../atoms/ErrorMessage/ErrorMessage";
 import NotificationPreferences from "../../molecules/NotificationPreferences/NotificationPreferences";
+import ThemePicker from "../../molecules/ThemePicker/ThemePicker";
 import { useAuthService } from "../../../services/useAuthService";
 import { useAuthenticatedUser } from "../../../hooks/useAuthenticatedUser";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
@@ -124,6 +125,9 @@ const AccountSettingsPage: React.FC = () => {
             </Stack>
           </CardContent>
         </Card>
+      </Grid>
+      <Grid size={12}>
+        <ThemePicker />
       </Grid>
       <Grid size={12}>
         <NotificationPreferences />

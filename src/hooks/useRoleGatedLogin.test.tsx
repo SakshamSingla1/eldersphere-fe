@@ -5,15 +5,23 @@ import { UserTypeEnum } from "../utils/enums";
 
 // vi.mock factories below are hoisted above any top-level const, so the mock fns they
 // close over must themselves be created inside vi.hoisted() rather than as plain consts.
-const { mockLogin, mockSwitchDefaultRole, mockSetAuthenticatedUser, mockLogout, mockNavigate, mockSetWsToken } =
-  vi.hoisted(() => ({
-    mockLogin: vi.fn(),
-    mockSwitchDefaultRole: vi.fn(),
-    mockSetAuthenticatedUser: vi.fn(),
-    mockLogout: vi.fn(),
-    mockNavigate: vi.fn(),
-    mockSetWsToken: vi.fn(),
-  }));
+const {
+  mockLogin,
+  mockSwitchDefaultRole,
+  mockSetAuthenticatedUser,
+  mockLogout,
+  mockNavigate,
+  mockSetWsToken,
+  mockApplyActiveColorTheme,
+} = vi.hoisted(() => ({
+  mockLogin: vi.fn(),
+  mockSwitchDefaultRole: vi.fn(),
+  mockSetAuthenticatedUser: vi.fn(),
+  mockLogout: vi.fn(),
+  mockNavigate: vi.fn(),
+  mockSetWsToken: vi.fn(),
+  mockApplyActiveColorTheme: vi.fn(),
+}));
 
 vi.mock("../services/useAuthService", () => ({
   useAuthService: () => ({ login: mockLogin }),
@@ -27,6 +35,12 @@ vi.mock("./useAuthenticatedUser", () => ({
   useAuthenticatedUser: () => ({
     setAuthenticatedUser: mockSetAuthenticatedUser,
     logout: mockLogout,
+  }),
+}));
+
+vi.mock("../contexts/ThemeModeContext", () => ({
+  useThemeMode: () => ({
+    applyActiveColorTheme: mockApplyActiveColorTheme,
   }),
 }));
 

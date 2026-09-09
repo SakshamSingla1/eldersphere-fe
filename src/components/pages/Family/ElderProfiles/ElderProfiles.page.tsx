@@ -3,7 +3,6 @@ import PersonIcon from "@mui/icons-material/Person";
 import CrudModule from "../../../templates/Shared/CrudModule.template";
 import type { TableColumn } from "../../../organisms/Table/TableV1";
 import { useElderProfileService, type ElderProfileResponse } from "../../../../services/useElderProfileService";
-import { GenderEnum, enumToOptions } from "../../../../utils/enums";
 import { formatDate, paginateClientSide } from "../../../../utils/helper";
 
 const ElderProfilesPage: React.FC = () => {
@@ -34,15 +33,7 @@ const ElderProfilesPage: React.FC = () => {
       getRowId={(r) => r.id}
       fetchPage={fetchPage}
       entityLabel="elder profile"
-      fields={[
-        { name: "name", label: "Full Name", required: true },
-        { name: "dateOfBirth", label: "Date of Birth", type: "date" },
-        { name: "gender", label: "Gender", type: "select", options: enumToOptions(GenderEnum) },
-        { name: "medicalConditions", label: "Medical Conditions", type: "textarea" },
-        { name: "address", label: "Address", type: "textarea" },
-        { name: "emergencyContactName", label: "Emergency Contact Name", gridSize: 6 },
-        { name: "emergencyContactPhone", label: "Emergency Contact Phone", gridSize: 6 },
-      ]}
+      basePath="/family/elder-profiles"
       onCreate={async (values) => {
         await elderProfileService.create(values as any);
       }}

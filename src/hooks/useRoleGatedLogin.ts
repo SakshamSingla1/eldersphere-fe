@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthService } from "../services/useAuthService";
 import { useUserSelfService } from "../services/useUserSelfService";
 import { useAuthenticatedUser } from "./useAuthenticatedUser";
+import { useThemeMode } from "../contexts/ThemeModeContext";
 import { homePathForUser } from "../routes/ProtectedRoute";
 import { setWsToken } from "../utils/wsToken";
 import type { UserTypeEnum } from "../utils/enums";
@@ -48,6 +49,7 @@ export const useRoleGatedLogin = (allowedUserTypes: UserTypeEnum[]) => {
   const authService = useAuthService();
   const userSelfService = useUserSelfService();
   const { setAuthenticatedUser, logout } = useAuthenticatedUser();
+  const { applyActiveColorTheme } = useThemeMode();
   const navigate = useNavigate();
 
   const login = useCallback(
@@ -84,15 +86,22 @@ export const useRoleGatedLogin = (allowedUserTypes: UserTypeEnum[]) => {
         phone: response.phone,
         userType: effectiveUserType,
         status: response.status,
-        roleId: response.roleId ?? undefined,
-        roleName: response.roleName ?? undefined,
+        roleId: response.roleId ?? null,
+        roleName: response.roleName ?? null,
         roles: heldRoles,
       });
+      // The login response already carries the caller's resolved active color theme
+      // inline (see LoginResponseDTO#activeTheme) — apply it immediately so the very
+      // first authenticated render already uses the right palette, no flash of default
+      // and no extra GET /users/me/theme round-trip needed right after login.
+      if (response.activeTheme) {
+        applyActiveColorTheme(response.activeTheme, response.id);
+      }
       navigate(homePathForUser(effectiveUserType));
       return { rejected: false };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [authService, userSelfService, logout, setAuthenticatedUser, navigate, ...allowedUserTypes]
+    [authService, userSelfService, logout, setAuthenticatedUser, applyActiveColorTheme, navigate, ...allowedUserTypes]
   );
 
   return useMemo(() => ({ login }), [login]);

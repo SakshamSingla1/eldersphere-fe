@@ -76,12 +76,29 @@ export const useLandingService = () => {
       updateFeature: (id: number, payload: LandingFeaturePayload) =>
         request<LandingFeatureResponse>("PUT", replaceUrlParams(LANDING_URLS.FEATURE_BY_ID, { id }), payload),
       deleteFeature: (id: number) => request<string>("DELETE", replaceUrlParams(LANDING_URLS.FEATURE_BY_ID, { id })),
+      // There's no GET /landing/features/{id} on the backend — only the "list all" and
+      // per-id write/delete endpoints exist. The admin edit page still needs to fetch one
+      // feature by id though, so this reuses the (unpaginated, realistically small) "list
+      // all" call and finds it client-side.
+      getFeatureById: async (id: number) => {
+        const all = await request<LandingFeatureResponse[]>("GET", LANDING_URLS.FEATURES);
+        const found = all.find((f) => f.id === id);
+        if (!found) throw new Error("Feature not found");
+        return found;
+      },
 
       getAllFaqs: () => request<LandingFaqResponse[]>("GET", LANDING_URLS.FAQS),
       createFaq: (payload: LandingFaqPayload) => request<LandingFaqResponse>("POST", LANDING_URLS.FAQS, payload),
       updateFaq: (id: number, payload: LandingFaqPayload) =>
         request<LandingFaqResponse>("PUT", replaceUrlParams(LANDING_URLS.FAQ_BY_ID, { id }), payload),
       deleteFaq: (id: number) => request<string>("DELETE", replaceUrlParams(LANDING_URLS.FAQ_BY_ID, { id })),
+      // Same "no GET by id" situation as features — see getFeatureById above.
+      getFaqById: async (id: number) => {
+        const all = await request<LandingFaqResponse[]>("GET", LANDING_URLS.FAQS);
+        const found = all.find((f) => f.id === id);
+        if (!found) throw new Error("FAQ not found");
+        return found;
+      },
 
       getAllTestimonials: () => request<LandingTestimonialResponse[]>("GET", LANDING_URLS.TESTIMONIALS),
       createTestimonial: (payload: LandingTestimonialPayload) =>
@@ -90,6 +107,13 @@ export const useLandingService = () => {
         request<LandingTestimonialResponse>("PUT", replaceUrlParams(LANDING_URLS.TESTIMONIAL_BY_ID, { id }), payload),
       deleteTestimonial: (id: number) =>
         request<string>("DELETE", replaceUrlParams(LANDING_URLS.TESTIMONIAL_BY_ID, { id })),
+      // Same "no GET by id" situation as features — see getFeatureById above.
+      getTestimonialById: async (id: number) => {
+        const all = await request<LandingTestimonialResponse[]>("GET", LANDING_URLS.TESTIMONIALS);
+        const found = all.find((t) => t.id === id);
+        if (!found) throw new Error("Testimonial not found");
+        return found;
+      },
     }),
     []
   );

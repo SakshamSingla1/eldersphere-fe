@@ -61,7 +61,7 @@ const Avatar: React.FC<AvatarProps> = ({ name, seed, src, sx, ...rest }) => {
   if (stage === "photo") {
     return (
       <MuiAvatar
-        src={src ?? undefined}
+        src={src}
         imgProps={{ onError: () => setStage("generated") }}
         sx={sx}
         {...rest}

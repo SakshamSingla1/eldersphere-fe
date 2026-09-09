@@ -68,7 +68,7 @@ const EmergencyAlertButton: React.FC<EmergencyAlertButtonProps> = ({ loading, di
         size={size}
         disabled={isInert}
         onClick={handleClick}
-        startIcon={loading ? <CircularProgress size={16} color="inherit" /> : undefined}
+        startIcon={loading ? <CircularProgress size={16} color="inherit" /> : null}
         whileTap={isInert ? undefined : { scale: 0.92 }}
         transition={{ duration: 0.32, ease: "easeOut" }}
       >

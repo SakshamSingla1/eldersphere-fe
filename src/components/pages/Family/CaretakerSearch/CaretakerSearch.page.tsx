@@ -65,7 +65,7 @@ const CaretakerSearchPage: React.FC = () => {
     setLoading(true);
     searchService
       .searchCaretakers({
-        category: (category || undefined) as any,
+        category: (category || null) as any,
         minRating: minRating ? Number(minRating) : undefined,
         verificationStatus: CaretakerVerificationStatusEnum.VERIFIED,
         minRate: minRate ? Number(minRate) : undefined,
@@ -114,8 +114,16 @@ const CaretakerSearchPage: React.FC = () => {
       icon={<SearchIcon color="primary" />}
       filterContent={
         <>
+          {/* Each control below is a `fullWidth` MUI TextField/Select (see the atoms), which
+              inside this row's flex-wrap container resolves its flex-basis to 100% of the
+              row — with 5 of them, every one lands on its own line instead of sharing a
+              compact row, wasting the page's full width on filters that are only ever a
+              few characters of input (see minWidth values). `width: { xs: "100%", sm: "auto" }`
+              keeps the fullWidth mobile stacking (one control per row, matching every other
+              filter/search field in the app at that size) but lets them size to content
+              (floored by minWidth) and sit side by side from `sm` up. */}
           <Select
-            sx={{ minWidth: 200 }}
+            sx={{ minWidth: 200, width: { xs: "100%", sm: "auto" } }}
             placeholder="All Categories"
             value={category}
             options={enumToOptions(ServiceCategoryEnum, ServiceCategoryLabels)}
@@ -125,7 +133,7 @@ const CaretakerSearchPage: React.FC = () => {
             }}
           />
           <Select
-            sx={{ minWidth: 160 }}
+            sx={{ minWidth: 160, width: { xs: "100%", sm: "auto" } }}
             placeholder="Any Rating"
             value={minRating}
             options={[
@@ -140,7 +148,7 @@ const CaretakerSearchPage: React.FC = () => {
           />
           <TextField
             key={`min-rate-${rateInputKey}`}
-            sx={{ minWidth: 130 }}
+            sx={{ minWidth: 130, width: { xs: "100%", sm: "auto" } }}
             type="number"
             label="Min $/hr"
             defaultValue={minRate}
@@ -149,7 +157,7 @@ const CaretakerSearchPage: React.FC = () => {
           />
           <TextField
             key={`max-rate-${rateInputKey}`}
-            sx={{ minWidth: 130 }}
+            sx={{ minWidth: 130, width: { xs: "100%", sm: "auto" } }}
             type="number"
             label="Max $/hr"
             defaultValue={maxRate}
@@ -158,7 +166,7 @@ const CaretakerSearchPage: React.FC = () => {
           />
           <TextField
             key={`location-${locationInputKey}`}
-            sx={{ minWidth: 180 }}
+            sx={{ minWidth: 180, width: { xs: "100%", sm: "auto" } }}
             label="Location"
             placeholder="e.g. Riverton"
             defaultValue={location}

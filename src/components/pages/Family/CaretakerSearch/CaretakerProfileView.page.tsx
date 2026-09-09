@@ -410,7 +410,7 @@ const CaretakerProfileViewPage: React.FC = () => {
                     value={form.elderProfileId}
                     options={elders.map((e) => ({ value: e.id, label: e.name }))}
                     error={Boolean(fieldErrors.elderProfileId)}
-                    helperText={fieldErrors.elderProfileId ? <FieldError message={fieldErrors.elderProfileId} /> : undefined}
+                    helperText={fieldErrors.elderProfileId ? <FieldError message={fieldErrors.elderProfileId} /> : null}
                     onChange={(e) => {
                       setForm((f) => ({ ...f, elderProfileId: e.target.value as string }));
                       setFieldErrors((prev) => ({ ...prev, elderProfileId: undefined }));
@@ -422,7 +422,7 @@ const CaretakerProfileViewPage: React.FC = () => {
                     value={form.serviceId}
                     options={services.map((s) => ({ value: s.id, label: `${s.name} (${ServiceCategoryLabels[s.category]})` }))}
                     error={Boolean(fieldErrors.serviceId)}
-                    helperText={fieldErrors.serviceId ? <FieldError message={fieldErrors.serviceId} /> : undefined}
+                    helperText={fieldErrors.serviceId ? <FieldError message={fieldErrors.serviceId} /> : null}
                     onChange={(e) => {
                       setForm((f) => ({ ...f, serviceId: e.target.value as string }));
                       setFieldErrors((prev) => ({ ...prev, serviceId: undefined }));

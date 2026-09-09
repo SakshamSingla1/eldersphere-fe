@@ -84,7 +84,7 @@ const HeroScene: React.FC<{ size?: number }> = ({ size = 380 }) => {
   // Idle keyframe loops are skipped outright under reduced motion rather than left running
   // at their normal amplitude — a "static but complete" scene, not a slowed one.
   const idle = (keyframes: Record<string, (number | string)[]>, duration: number, delay = 0) =>
-    prefersReducedMotion ? undefined : { animate: keyframes, transition: { duration, repeat: Infinity, ease: "easeInOut" as const, delay } };
+    prefersReducedMotion ? null : { animate: keyframes, transition: { duration, repeat: Infinity, ease: "easeInOut" as const, delay } };
 
   return (
     <Box

@@ -89,7 +89,7 @@ const CaretakerMyProfilePage: React.FC = () => {
     }
   };
 
-  const handlePhotoUpload = async (file: File | undefined) => {
+  const handlePhotoUpload = async (file: File | null | undefined) => {
     if (!file) return;
     setUploadingPhoto(true);
     try {

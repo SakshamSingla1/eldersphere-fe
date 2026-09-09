@@ -98,7 +98,7 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                   <CloseRoundedIcon fontSize="small" />
                 </IconButton>
               </>
-            ) : undefined
+            ) : null
           }
           sx={{
             minWidth: 300,

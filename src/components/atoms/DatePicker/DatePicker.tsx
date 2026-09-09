@@ -17,7 +17,7 @@ export type DatePickerType = "date" | "time" | "datetime";
 
 export interface DatePickerProps {
   label?: string;
-  value: string | null | null;
+  value: string | null | undefined;
   onChange: (value: string) => void;
   required?: boolean;
   error?: boolean;
@@ -49,7 +49,7 @@ const FALLBACK_FORMATS_BY_TYPE: Record<DatePickerType, string[]> = {
   datetime: ["YYYY-MM-DDTHH:mm:ss", "YYYY-MM-DD HH:mm:ss", "YYYY-MM-DD HH:mm"],
 };
 
-const parseValue = (value: string | null | null, type: DatePickerType): Dayjs | null => {
+const parseValue = (value: string | null | undefined, type: DatePickerType): Dayjs | null => {
   if (!value) return null;
   const formats = [FORMAT_BY_TYPE[type], ...FALLBACK_FORMATS_BY_TYPE[type]];
   for (const format of formats) {

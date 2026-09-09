@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Box, Tabs, Tab, Card, CardContent, Stack, Typography, Checkbox as MuiCheckbox, FormControlLabel, Chip, Divider } from "@mui/material";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import PageHeader from "../../molecules/PageHeader/PageHeader";
@@ -7,14 +8,15 @@ import type { TableColumn } from "../../organisms/Table/TableV1";
 import Select from "../../atoms/Select/Select";
 import { useRoleService, type RoleResponseDTO } from "../../../services/useRoleService";
 import { usePermissionService, type PermissionResponseDTO } from "../../../services/usePermissionService";
-import { RoleStatusEnum, enumToOptions } from "../../../utils/enums";
 import { paginateClientSide } from "../../../utils/helper";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
 import { getErrorMessage } from "../../../utils/helper";
 import { groupPermissionsByModule } from "../../../utils/permissionModules";
 
+const TAB_KEYS = ["roles", "permissions", "assignment"] as const;
+
 interface RoleRow extends RoleResponseDTO {
-  /** undefined while still loading, so the column can show "…" instead of a misleading 0. */
+  /** null while still loading, so the column can show "…" instead of a misleading 0. */
   permissionCount?: number;
 }
 
@@ -28,7 +30,7 @@ const RolesTab: React.FC = () => {
     {
       key: "permissionCount",
       label: "Permissions",
-      render: (r) => (r.permissionCount === undefined ? "…" : <Chip size="small" label={`${r.permissionCount} granted`} />),
+      render: (r) => (r.permissionCount === null ? "…" : <Chip size="small" label={`${r.permissionCount} granted`} />),
     },
     { key: "status", label: "Status", render: (r) => r.status },
   ];
@@ -63,11 +65,8 @@ const RolesTab: React.FC = () => {
       getRowId={(r) => r.id}
       fetchPage={fetchPage}
       entityLabel="role"
-      fields={[
-        { name: "name", label: "Name", required: true },
-        { name: "description", label: "Description", type: "textarea" },
-        { name: "status", label: "Status", type: "select", options: enumToOptions(RoleStatusEnum) },
-      ]}
+      basePath="/admin/roles-permissions/roles"
+      extraQuery="tab=roles"
       onCreate={async (values) => {
         await roleService.create(values as any);
       }}
@@ -104,10 +103,8 @@ const PermissionsTab: React.FC = () => {
       getRowId={(r) => r.id}
       fetchPage={fetchPage}
       entityLabel="permission"
-      fields={[
-        { name: "name", label: "Name", required: true },
-        { name: "description", label: "Description", type: "textarea" },
-      ]}
+      basePath="/admin/roles-permissions/permissions"
+      extraQuery="tab=permissions"
       onCreate={async (values) => {
         await permissionService.create(values as any);
       }}
@@ -255,7 +252,15 @@ const AssignmentTab: React.FC = () => {
 };
 
 const AdminRolesPermissionsPage: React.FC = () => {
-  const [tab, setTab] = useState(0);
+  const [searchParams] = useSearchParams();
+  // Add/Edit navigates away to its own page (see RoleForm.page.tsx / PermissionForm.page.tsx)
+  // and back here via `?tab=roles`/`?tab=permissions` (set as CrudModule's `extraQuery`) —
+  // read it once on mount so returning from Save/Cancel lands back on the tab the user was
+  // actually on, not always the default "Roles" tab.
+  const [tab, setTab] = useState(() => {
+    const fromUrl = TAB_KEYS.indexOf(searchParams.get("tab") as (typeof TAB_KEYS)[number]);
+    return fromUrl >= 0 ? fromUrl : 0;
+  });
 
   return (
     <Box>

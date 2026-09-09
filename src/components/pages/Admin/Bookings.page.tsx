@@ -40,8 +40,7 @@ const AdminBookingsPage: React.FC = () => {
       searchable={false}
       entityLabel="booking"
       addLabel="Update Status"
-      toFormValues={(r) => ({ status: r.status })}
-      fields={[{ name: "status", label: "Status", type: "select", required: true, options: enumToOptions(BookingStatusEnum) }]}
+      basePath="/admin/bookings"
       onUpdate={async (row, values) => {
         await bookingService.updateStatus(row.id, values.status);
       }}

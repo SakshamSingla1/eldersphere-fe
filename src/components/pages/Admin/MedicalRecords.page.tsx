@@ -1,5 +1,6 @@
-import React, { useCallback, useState } from "react";
-import { Card, CardContent, Stack, Alert, Typography } from "@mui/material";
+import React, { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Card, CardContent, Stack, Alert } from "@mui/material";
 import FolderSharedIcon from "@mui/icons-material/FolderShared";
 import PageHeader from "../../molecules/PageHeader/PageHeader";
 import CrudModule from "../../templates/Shared/CrudModule.template";
@@ -7,7 +8,6 @@ import type { TableColumn } from "../../organisms/Table/TableV1";
 import TextField from "../../atoms/TextField/TextField";
 import Button from "../../atoms/Button/Button";
 import { useMedicalRecordService, type MedicalRecordResponse } from "../../../services/useMedicalRecordService";
-import { MedicalRecordTypeEnum, enumToOptions } from "../../../utils/enums";
 import { formatDateTime } from "../../../utils/helper";
 
 // Note: MedicalRecordController only lists records scoped to one elder
@@ -15,8 +15,25 @@ import { formatDateTime } from "../../../utils/helper";
 // endpoint, so this page looks records up by elder ID rather than showing a global table.
 const AdminMedicalRecordsPage: React.FC = () => {
   const medicalRecordService = useMedicalRecordService();
-  const [elderIdInput, setElderIdInput] = useState("");
-  const [activeElderId, setActiveElderId] = useState<number | null>(null);
+  const [searchParams] = useSearchParams();
+  const [elderIdInput, setElderIdInput] = useState(() => searchParams.get("elderId") ?? "");
+  const [activeElderId, setActiveElderId] = useState<number | null>(() => {
+    const fromUrl = searchParams.get("elderId");
+    return fromUrl ? Number(fromUrl) : null;
+  });
+
+  // Returning here from the edit page (see MedicalRecordsForm.page.tsx, which passes
+  // `?elderId=` back through as part of its backPath) should land back on the same elder's
+  // records rather than resetting to the blank lookup form — this re-syncs from the URL if
+  // it changes (e.g. the browser back button) without re-running on every render.
+  useEffect(() => {
+    const fromUrl = searchParams.get("elderId");
+    if (fromUrl && Number(fromUrl) !== activeElderId) {
+      setElderIdInput(fromUrl);
+      setActiveElderId(Number(fromUrl));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const columns: TableColumn<MedicalRecordResponse>[] = [
     { key: "type", label: "Type", render: (r) => r.type },
@@ -69,12 +86,8 @@ const AdminMedicalRecordsPage: React.FC = () => {
           fetchPage={fetchPage}
           searchable={false}
           entityLabel="medical record"
-          fields={[
-            { name: "type", label: "Type", type: "select", required: true, options: enumToOptions(MedicalRecordTypeEnum) },
-            { name: "title", label: "Title", required: true },
-            { name: "notes", label: "Notes", type: "textarea" },
-            { name: "sharedWithFamily", label: "Shared with family", type: "checkbox" },
-          ]}
+          basePath="/admin/medical-records"
+          extraQuery={`elderId=${activeElderId}`}
           onUpdate={async (row, values) => {
             await medicalRecordService.update(row.id, {
               elderProfileId: activeElderId,

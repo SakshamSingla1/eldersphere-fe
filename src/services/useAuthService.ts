@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { request } from ".";
 import type { UserTypeEnum, UserStatusEnum } from "../utils/enums";
+import type { ActiveColorTheme } from "../utils/theme";
 
 const AUTH_URLS = {
   REGISTER: "/auth/register",
@@ -42,6 +43,10 @@ export interface LoginResponseDTO {
    * backends, callers should fall back to treating `userType` as the only held role. */
   roles?: UserTypeEnum[];
   token?: string;
+  /** The caller's resolved active color theme, included inline so the frontend can paint
+   * its dashboard theme immediately after login without a second round-trip to
+   * GET /users/me/theme. Absent on an older backend response. */
+  activeTheme?: ActiveColorTheme;
 }
 
 export const useAuthService = () => {

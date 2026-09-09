@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import PeopleIcon from "@mui/icons-material/People";
 import ShieldIcon from "@mui/icons-material/Shield";
 import { Chip, Stack } from "@mui/material";
@@ -11,25 +11,19 @@ import StatusChip from "../../atoms/Chip/StatusChip";
 import { USER_ACCOUNT_STATUS_TONE } from "../../atoms/Chip/statusTones";
 import ManageUserRolesDialog, { type ManageUserRolesTarget } from "../../molecules/ManageUserRolesDialog/ManageUserRolesDialog";
 import { useUserService, type UserResponse } from "../../../services/useUserService";
-import { useRoleService } from "../../../services/useRoleService";
-import { usePermissionService } from "../../../services/usePermissionService";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
 import { useAuthenticatedUser } from "../../../hooks/useAuthenticatedUser";
-import { UserTypeEnum, UserStatusEnum, USER_TYPE_LABEL, enumToOptions } from "../../../utils/enums";
+import { UserTypeEnum, USER_TYPE_LABEL, enumToOptions } from "../../../utils/enums";
 import { getErrorMessage } from "../../../utils/helper";
-import { distinctModuleLabels } from "../../../utils/permissionModules";
 
 const NO_RESTRICTION_VALUE = "";
 
 const AdminUsersPage: React.FC = () => {
   const userService = useUserService();
-  const roleService = useRoleService();
-  const permissionService = usePermissionService();
   const { showSnackbar } = useSnackbar();
   const { user: currentUser } = useAuthenticatedUser();
   const callerIsSuperAdmin = currentUser?.userType === UserTypeEnum.SUPER_ADMIN;
   const [userTypeFilter, setUserTypeFilter] = useState("");
-  const [roleOptions, setRoleOptions] = useState<{ value: string | number; label: string }[]>([]);
   const [bulkDeleting, setBulkDeleting] = useState(false);
   // Base-roles (multi-role) management dialog — separate control from the fine-grained
   // RBAC "Role" field already in the edit form below (roleId/roleName), see
@@ -56,37 +50,6 @@ const AdminUsersPage: React.FC = () => {
       setBulkDeleting(false);
     }
   };
-
-  useEffect(() => {
-    roleService
-      .getAll()
-      .then(async (roles) => {
-        // Each option's label spells out exactly what that role grants (e.g. "Bookings
-        // Coordinator — Bookings, Services, Medical Records") — assigning a restricted role
-        // should never be a guess from the name alone. One getByRole call per role; the
-        // roster is small (a handful of custom roles), so this stays cheap.
-        const withSummaries = await Promise.all(
-          roles.map(async (r) => {
-            try {
-              const rp = await permissionService.getByRole(r.id);
-              const modules = distinctModuleLabels(rp.permissions.map((p) => p.name));
-              return { value: r.id, label: modules.length > 0 ? `${r.name} — ${modules.join(", ")}` : `${r.name} (no permissions granted)` };
-            } catch {
-              return { value: r.id, label: r.name };
-            }
-          })
-        );
-        setRoleOptions([{ value: NO_RESTRICTION_VALUE, label: "No restriction (full admin access)" }, ...withSummaries]);
-      })
-      .catch(() => {
-        // GET /roles is hasRole('SUPER_ADMIN') on the backend (see AdminRoutes.tsx's note on
-        // the same split) — a plain ADMIN gets a 403 here. Custom roles are a super-admin-only
-        // concept anyway, so a plain admin simply sees no restricted-role options instead of
-        // an unhandled rejection and a silently-empty dropdown.
-        setRoleOptions([{ value: NO_RESTRICTION_VALUE, label: "No restriction (full admin access)" }]);
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const columns: TableColumn<UserResponse>[] = [
     { key: "fullName", label: "Name", render: (r) => r.fullName, sortAccessor: (r) => r.fullName.toLowerCase() },
@@ -134,24 +97,7 @@ const AdminUsersPage: React.FC = () => {
       getRowId={(r) => r.id}
       fetchPage={fetchPage}
       entityLabel="user"
-      toFormValues={(r) => ({ status: r.status, roleId: r.roleId ?? "" })}
-      fields={[
-        { name: "fullName", label: "Full Name", required: true, gridSize: 6, hideOnEdit: true, section: "Account Details" },
-        { name: "email", label: "Email", required: true, gridSize: 6, hideOnEdit: true, section: "Account Details" },
-        { name: "phone", label: "Phone", gridSize: 6, hideOnEdit: true, section: "Account Details" },
-        { name: "password", label: "Password", gridSize: 6, hideOnEdit: true, section: "Account Details" },
-        { name: "userType", label: "User Type", type: "select", required: true, gridSize: 6, options: enumToOptions(UserTypeEnum), hideOnEdit: true, section: "Access & Role" },
-        {
-          name: "roleId",
-          label: "Role",
-          type: "select",
-          gridSize: 6,
-          options: roleOptions,
-          section: "Access & Role",
-          helperText: "Only applies to Admin accounts — restricts them to the modules a role grants instead of full admin access.",
-        },
-        { name: "status", label: "Status", type: "select", gridSize: 6, options: enumToOptions(UserStatusEnum), hideOnCreate: true, section: "Access & Role" },
-      ]}
+      basePath="/admin/users"
       extraToolbarContent={
         <Select
           label="User Type"

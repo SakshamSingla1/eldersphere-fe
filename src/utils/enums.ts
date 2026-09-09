@@ -96,6 +96,12 @@ export const RoleStatusEnum = {
 } as const;
 export type RoleStatusEnum = (typeof RoleStatusEnum)[keyof typeof RoleStatusEnum];
 
+export const ColorThemeStatusEnum = {
+  ACTIVE: "ACTIVE",
+  INACTIVE: "INACTIVE",
+} as const;
+export type ColorThemeStatusEnum = (typeof ColorThemeStatusEnum)[keyof typeof ColorThemeStatusEnum];
+
 export const ResourceTypeEnum = {
   CARETAKER_PROFILE_PHOTO: "CARETAKER_PROFILE_PHOTO",
   MEDICAL_RECORD_DOCUMENT: "MEDICAL_RECORD_DOCUMENT",

@@ -59,8 +59,8 @@ describe("formatCurrency", () => {
     expect(formatCurrency("500")).toBe("₹500.00");
   });
 
-  it("renders an em dash for null, null, empty string, or non-numeric input", () => {
-    expect(formatCurrency(null)).toBe("—");
+  it("renders an em dash for undefined, null, empty string, or non-numeric input", () => {
+    expect(formatCurrency(undefined)).toBe("—");
     expect(formatCurrency(null)).toBe("—");
     expect(formatCurrency("")).toBe("—");
     expect(formatCurrency("not-a-number")).toBe("—");
@@ -75,7 +75,7 @@ describe("getInitials", () => {
   });
 
   it("returns a placeholder for missing/blank names", () => {
-    expect(getInitials(null)).toBe("?");
+    expect(getInitials(undefined)).toBe("?");
     expect(getInitials(null)).toBe("?");
     expect(getInitials("")).toBe("?");
   });

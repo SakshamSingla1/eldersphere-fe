@@ -3,16 +3,23 @@ import { Box, Typography, IconButton, Divider } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 export interface FormShellProps {
-  title: string;
+  /**
+   * Optional — when this FormShell renders as a full page (see CrudFormPage.template.tsx),
+   * the page's own PageHeader already shows the title/back-link, so this is omitted and
+   * FormShell renders just the body + sticky actions row. Dialog usages (CrudModule's
+   * delete-confirm aside, Reviews.page.tsx's reply dialog) still pass it since the Dialog
+   * has no title of its own.
+   */
+  title?: string;
   subtitle?: string;
   onBack?: () => void;
   children: React.ReactNode;
   actions?: React.ReactNode;
   /**
-   * When this FormShell is rendered inside a MUI Dialog (see CrudModule.template.tsx and
-   * Reviews.page.tsx), the Dialog has no <DialogTitle> of its own — pass the same id here
-   * and as the Dialog's `aria-labelledby` so screen readers get an accessible name for the
-   * dialog instead of just "dialog". Not needed when FormShell renders as a full page.
+   * When this FormShell is rendered inside a MUI Dialog (see Reviews.page.tsx), the Dialog
+   * has no <DialogTitle> of its own — pass the same id here and as the Dialog's
+   * `aria-labelledby` so screen readers get an accessible name for the dialog instead of
+   * just "dialog". Not needed when FormShell renders as a full page.
    */
   titleId?: string;
 }
@@ -22,23 +29,25 @@ export interface FormShellProps {
 // body, and an actions row. Mirrors the reference project's FormShell.template.tsx.
 const FormShell: React.FC<FormShellProps> = ({ title, subtitle, onBack, children, actions, titleId }) => (
   <Box>
-    <Box display="flex" alignItems="center" gap={1} mb={2}>
-      {onBack && (
-        <IconButton size="small" onClick={onBack} aria-label="Go back">
-          <ArrowBackIcon fontSize="small" />
-        </IconButton>
-      )}
-      <Box>
-        <Typography id={titleId} variant="h6" fontWeight={800}>
-          {title}
-        </Typography>
-        {subtitle && (
-          <Typography variant="body2" color="text.secondary">
-            {subtitle}
-          </Typography>
+    {title && (
+      <Box display="flex" alignItems="center" gap={1} mb={2}>
+        {onBack && (
+          <IconButton size="small" onClick={onBack} aria-label="Go back">
+            <ArrowBackIcon fontSize="small" />
+          </IconButton>
         )}
+        <Box>
+          <Typography id={titleId} variant="h6" fontWeight={800}>
+            {title}
+          </Typography>
+          {subtitle && (
+            <Typography variant="body2" color="text.secondary">
+              {subtitle}
+            </Typography>
+          )}
+        </Box>
       </Box>
-    </Box>
+    )}
     <Divider sx={{ mb: 2.5 }} />
     <Box>{children}</Box>
     {actions && (

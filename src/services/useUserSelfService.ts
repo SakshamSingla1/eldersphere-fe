@@ -2,12 +2,14 @@ import { useMemo } from "react";
 import { request } from ".";
 import type { UserTypeEnum, NotificationTypeEnum } from "../utils/enums";
 import type { PushSubscriptionJSON } from "../utils/webPush";
+import type { ActiveColorTheme } from "../utils/theme";
 
 const USER_SELF_URLS = {
   ROLES: "/users/me/roles",
   DEFAULT_ROLE: "/users/me/default-role",
   NOTIFICATION_PREFERENCES: "/users/me/notification-preferences",
   PUSH_SUBSCRIPTIONS: "/users/me/push-subscriptions",
+  THEME: "/users/me/theme",
 };
 
 // Mirrors com.eldersphere.dtos.User.UserRolesResponse.
@@ -47,6 +49,8 @@ export const useUserSelfService = () => {
         request<void>("POST", USER_SELF_URLS.PUSH_SUBSCRIPTIONS, subscription),
       removePushSubscription: (endpoint: string) =>
         request<void>("DELETE", USER_SELF_URLS.PUSH_SUBSCRIPTIONS, { endpoint }),
+      getMyTheme: () => request<ActiveColorTheme>("GET", USER_SELF_URLS.THEME),
+      setMyTheme: (themeId: number | null) => request<ActiveColorTheme>("PUT", USER_SELF_URLS.THEME, { themeId }),
     }),
     []
   );

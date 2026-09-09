@@ -33,7 +33,7 @@ const FamilyReviewsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const handlePhotoUpload = async (file: File | undefined) => {
+  const handlePhotoUpload = async (file: File | null | undefined) => {
     if (!file) return;
     setUploadingPhoto(true);
     try {

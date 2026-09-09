@@ -34,13 +34,7 @@ const AdminServicesPage: React.FC = () => {
       fetchPage={fetchPage}
       searchable={false}
       entityLabel="service"
-      fields={[
-        { name: "name", label: "Name", required: true },
-        { name: "category", label: "Category", type: "select", required: true, options: enumToOptions(ServiceCategoryEnum, ServiceCategoryLabels) },
-        { name: "description", label: "Description", type: "textarea" },
-        { name: "basePrice", label: "Base Price (₹)", type: "number", gridSize: 6 },
-        { name: "durationMinutes", label: "Duration (minutes)", type: "number", gridSize: 6 },
-      ]}
+      basePath="/admin/services"
       extraToolbarContent={
         <Select
           label="Category"

@@ -42,11 +42,7 @@ const AdminEmergencyAlertsPage: React.FC = () => {
       searchable={false}
       entityLabel="alert"
       addLabel="Update"
-      toFormValues={(r) => ({ status: r.status, respondingCaretakerId: r.respondingCaretakerId ?? "" })}
-      fields={[
-        { name: "status", label: "Status", type: "select", required: true, options: enumToOptions(EmergencyAlertStatusEnum) },
-        { name: "respondingCaretakerId", label: "Responding Caretaker ID", type: "number" },
-      ]}
+      basePath="/admin/emergency-alerts"
       onUpdate={async (row, values) => {
         await emergencyAlertService.updateStatus(
           row.id,

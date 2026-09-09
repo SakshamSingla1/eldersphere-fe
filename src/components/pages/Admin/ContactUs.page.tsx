@@ -38,8 +38,7 @@ const AdminContactUsPage: React.FC = () => {
       fetchPage={fetchPage}
       entityLabel="submission"
       addLabel="Update Status"
-      toFormValues={(r) => ({ status: r.status })}
-      fields={[{ name: "status", label: "Status", type: "select", required: true, options: enumToOptions(ContactUsStatusEnum) }]}
+      basePath="/admin/contact-us"
       onUpdate={async (row, values) => {
         await contactUsService.updateStatus(row.id, values.status);
       }}

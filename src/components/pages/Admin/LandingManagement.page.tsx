@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Box, Tabs, Tab, Card, CardContent, Stack, Typography, Grid } from "@mui/material";
 import WebIcon from "@mui/icons-material/Web";
 import PageHeader from "../../molecules/PageHeader/PageHeader";
@@ -91,22 +92,31 @@ const ConfigTab: React.FC = () => {
         )}
         <ErrorMessage message={error} />
         <Stack component="form" spacing={2} onSubmit={handleSubmit}>
-          <TextField
-            label="Hero Headline"
-            value={config.heroHeadline ?? ""}
-            onChange={(e) => setConfig((c) => ({ ...(c as LandingPageConfigResponse), heroHeadline: e.target.value }))}
-          />
+          {/* Headline + image URL paired in a row (rather than each stacked full-width) so
+              this section's grid rhythm matches the CTA row just below instead of looking
+              ad hoc — two single-line fields have no reason to each claim the full card width. */}
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 7 }}>
+              <TextField
+                label="Hero Headline"
+                value={config.heroHeadline ?? ""}
+                onChange={(e) => setConfig((c) => ({ ...(c as LandingPageConfigResponse), heroHeadline: e.target.value }))}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 5 }}>
+              <TextField
+                label="Hero Image URL"
+                value={config.heroImageUrl ?? ""}
+                onChange={(e) => setConfig((c) => ({ ...(c as LandingPageConfigResponse), heroImageUrl: e.target.value }))}
+              />
+            </Grid>
+          </Grid>
           <TextField
             label="Hero Subheadline"
             multiline
             minRows={2}
             value={config.heroSubheadline ?? ""}
             onChange={(e) => setConfig((c) => ({ ...(c as LandingPageConfigResponse), heroSubheadline: e.target.value }))}
-          />
-          <TextField
-            label="Hero Image URL"
-            value={config.heroImageUrl ?? ""}
-            onChange={(e) => setConfig((c) => ({ ...(c as LandingPageConfigResponse), heroImageUrl: e.target.value }))}
           />
           <Grid container spacing={2}>
             <Grid size={12}>
@@ -165,14 +175,8 @@ const FeaturesTab: React.FC = () => {
       getRowId={(r) => r.id}
       fetchPage={fetchPage}
       entityLabel="feature"
-      initialValues={{ isActive: true }}
-      fields={[
-        { name: "title", label: "Title", required: true },
-        { name: "description", label: "Description", type: "textarea" },
-        { name: "iconName", label: "Icon Name" },
-        { name: "sortOrder", label: "Sort Order", type: "number", gridSize: 6 },
-        { name: "isActive", label: "Active", type: "checkbox", gridSize: 6 },
-      ]}
+      basePath="/admin/landing-management/features"
+      extraQuery="tab=features"
       onCreate={async (values) => {
         await landingService.createFeature(values as any);
       }}
@@ -211,13 +215,8 @@ const FaqsTab: React.FC = () => {
       getRowId={(r) => r.id}
       fetchPage={fetchPage}
       entityLabel="FAQ"
-      initialValues={{ isActive: true }}
-      fields={[
-        { name: "question", label: "Question", required: true },
-        { name: "answer", label: "Answer", type: "textarea", required: true },
-        { name: "sortOrder", label: "Sort Order", type: "number", gridSize: 6 },
-        { name: "isActive", label: "Active", type: "checkbox", gridSize: 6 },
-      ]}
+      basePath="/admin/landing-management/faqs"
+      extraQuery="tab=faqs"
       onCreate={async (values) => {
         await landingService.createFaq(values as any);
       }}
@@ -257,16 +256,8 @@ const TestimonialsTab: React.FC = () => {
       getRowId={(r) => r.id}
       fetchPage={fetchPage}
       entityLabel="testimonial"
-      initialValues={{ isActive: true, rating: 5 }}
-      fields={[
-        { name: "authorName", label: "Author Name", required: true, gridSize: 6, section: "Author" },
-        { name: "authorRole", label: "Author Role", gridSize: 6, section: "Author" },
-        { name: "avatarUrl", label: "Avatar URL", section: "Author" },
-        { name: "content", label: "Content", type: "textarea", required: true, section: "Testimonial" },
-        { name: "rating", label: "Rating (1-5)", type: "number", gridSize: 6, section: "Testimonial" },
-        { name: "sortOrder", label: "Sort Order", type: "number", gridSize: 6, section: "Display" },
-        { name: "isActive", label: "Active", type: "checkbox", gridSize: 6, section: "Display" },
-      ]}
+      basePath="/admin/landing-management/testimonials"
+      extraQuery="tab=testimonials"
       onCreate={async (values) => {
         await landingService.createTestimonial(values as any);
       }}
@@ -280,8 +271,18 @@ const TestimonialsTab: React.FC = () => {
   );
 };
 
+const LANDING_TAB_KEYS = ["config", "features", "faqs", "testimonials"] as const;
+
 const AdminLandingManagementPage: React.FC = () => {
-  const [tab, setTab] = useState(0);
+  const [searchParams] = useSearchParams();
+  // Add/Edit navigates away to its own page (see LandingFeatureForm/FaqForm/TestimonialForm
+  // .page.tsx) and back here via `?tab=features` etc. (set as CrudModule's `extraQuery`) —
+  // read it once on mount so returning from Save/Cancel lands back on the tab the user was
+  // actually on, not always the default "Hero & CTA" tab.
+  const [tab, setTab] = useState(() => {
+    const fromUrl = LANDING_TAB_KEYS.indexOf(searchParams.get("tab") as (typeof LANDING_TAB_KEYS)[number]);
+    return fromUrl >= 0 ? fromUrl : 0;
+  });
 
   return (
     <Box>

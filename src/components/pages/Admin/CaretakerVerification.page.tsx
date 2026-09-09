@@ -59,8 +59,7 @@ const AdminCaretakerVerificationPage: React.FC = () => {
       searchable={false}
       entityLabel="caretaker"
       addLabel="Review"
-      toFormValues={(r) => ({ verificationStatus: r.verificationStatus })}
-      fields={[{ name: "verificationStatus", label: "Verification Status", type: "select", required: true, options: enumToOptions(CaretakerVerificationStatusEnum) }]}
+      basePath="/admin/caretaker-verification"
       onUpdate={async (row, values) => {
         await caretakerService.updateVerification(row.id, values.verificationStatus);
       }}
