@@ -35,6 +35,8 @@ export interface CaretakerSearchParams {
   minRate?: number;
   maxRate?: number;
   location?: string;
+  /** Free-text match against the caretaker's name, email, or phone. */
+  query?: string;
   page?: number;
   size?: number;
   sort?: string;

@@ -21,7 +21,7 @@ const AdminEmergencyAlertsPage: React.FC = () => {
     { key: "status", label: "Status", render: (r) => <StatusChip label={r.status} tone={EMERGENCY_ALERT_STATUS_TONE[r.status]} /> },
     { key: "location", label: "Location", render: (r) => r.resolvedAddress || "—" },
     { key: "triggeredAt", label: "Triggered At", render: (r) => formatDateTime(r.triggeredAt) },
-    { key: "respondingCaretaker", label: "Responder", render: (r) => (r.respondingCaretakerId ? `Caretaker #${r.respondingCaretakerId}` : "—") },
+    { key: "respondingCaretaker", label: "Responder", render: (r) => r.respondingCaretakerName ?? (r.respondingCaretakerId ? `Caretaker #${r.respondingCaretakerId}` : "—") },
     { key: "resolvedAt", label: "Resolved At", render: (r) => formatDateTime(r.resolvedAt) },
     { key: "responseTime", label: "Response Time", render: (r) => (r.responseTimeSeconds ? `${r.responseTimeSeconds}s` : "—") },
   ];

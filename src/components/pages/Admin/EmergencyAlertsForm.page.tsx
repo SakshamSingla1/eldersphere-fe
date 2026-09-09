@@ -18,10 +18,14 @@ const AdminEmergencyAlertFormPage: React.FC = () => {
       icon={<WarningAmberIcon color="error" />}
       backPath="/admin/emergency-alerts"
       getById={getById}
-      toFormValues={(r) => ({ status: r.status, respondingCaretakerId: r.respondingCaretakerId ?? "" })}
+      toFormValues={(r) => ({
+        status: r.status,
+        respondingCaretakerId: r.respondingCaretakerId ?? "",
+        respondingCaretakerId__label: r.respondingCaretakerName ?? "",
+      })}
       fields={[
         { name: "status", label: "Status", type: "select", required: true, options: enumToOptions(EmergencyAlertStatusEnum) },
-        { name: "respondingCaretakerId", label: "Responding Caretaker ID", type: "number" },
+        { name: "respondingCaretakerId", label: "Responding Caretaker", type: "caretaker" },
       ]}
       onUpdate={async (row, values) => {
         await emergencyAlertService.updateStatus(

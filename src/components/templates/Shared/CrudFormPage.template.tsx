@@ -13,6 +13,7 @@ import Checkbox from "../../atoms/Checkbox/Checkbox";
 import ErrorMessage from "../../atoms/ErrorMessage/ErrorMessage";
 import FieldError from "../../atoms/FieldError/FieldError";
 import AddressAutocomplete from "../../molecules/AddressAutocomplete/AddressAutocomplete";
+import CaretakerSearchAutocomplete from "../../molecules/CaretakerSearchAutocomplete/CaretakerSearchAutocomplete";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
 import { useFileService } from "../../../services/useFileService";
 import { getErrorMessage } from "../../../utils/helper";
@@ -21,8 +22,12 @@ import type { ResourceTypeEnum } from "../../../utils/enums";
 export interface CrudFieldConfig {
   name: string;
   label: string;
-  /** "address" renders a free OpenStreetMap-backed autocomplete (see AddressAutocomplete) instead of a plain text field. */
-  type?: "text" | "number" | "select" | "checkbox" | "textarea" | "date" | "file" | "address";
+  /**
+   * "address" renders a free OpenStreetMap-backed autocomplete (see AddressAutocomplete)
+   * instead of a plain text field. "caretaker" renders a search-by-name/email/phone picker
+   * (see CaretakerSearchAutocomplete) that stores the selected caretaker's profile id.
+   */
+  type?: "text" | "number" | "select" | "checkbox" | "textarea" | "date" | "file" | "address" | "caretaker";
   options?: SelectOption[];
   required?: boolean;
   gridSize?: number; // out of 12, defaults to 12
@@ -272,6 +277,24 @@ function CrudFormPage<T>({
             onChange={(newValue) => handleFieldChange(field.name, newValue)}
           />
         );
+      case "caretaker": {
+        // Companion field (set by toFormValues, mirroring the "file" type's `__fileName`
+        // pattern) so an already-assigned caretaker shows by name when editing, without a
+        // fresh search — see CrudFormPageProps.toFormValues on the emergency alert form.
+        const initialLabel = formValues[`${field.name}__label`];
+        return (
+          <CaretakerSearchAutocomplete
+            label={field.label}
+            placeholder="Search by name, email, or phone"
+            helperText={fieldHelperText(field, fieldError)}
+            initialValue={value && initialLabel ? { id: Number(value), fullName: initialLabel } : null}
+            onSelect={(caretaker) => {
+              handleFieldChange(field.name, caretaker?.id ?? "");
+              handleFieldChange(`${field.name}__label`, caretaker?.fullName ?? "");
+            }}
+          />
+        );
+      }
       case "number":
         return (
           <TextField

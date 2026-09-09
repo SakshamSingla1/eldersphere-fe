@@ -20,6 +20,7 @@ export interface EmergencyAlertResponse extends AuditableResponse {
   resolvedAddress?: string | null;
   status: EmergencyAlertStatusEnum;
   respondingCaretakerId?: number | null;
+  respondingCaretakerName?: string | null;
   triggeredAt?: string;
   resolvedAt?: string | null;
   responseTimeSeconds?: number | null;
