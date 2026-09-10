@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, Paper, Typography, Stack } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "../../atoms/Button/Button";
 import { useAuthenticatedUser } from "../../../hooks/useAuthenticatedUser";
@@ -94,12 +95,21 @@ function useTargetRect(selector: string | null): DOMRect | null {
 const OnboardingTour: React.FC<OnboardingTourProps> = ({ roleLabel, navItems }) => {
   const theme = useTheme();
   const { user } = useAuthenticatedUser();
+  const { pathname } = useLocation();
   const [dismissed, setDismissed] = useState(true);
   const [stepIndex, setStepIndex] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const highlight = ROLE_NAV_HIGHLIGHT[roleLabel];
   const navLabel = navItems.find((n) => n.path === highlight?.path)?.label ?? "this section";
+  // Its first step spotlights #dashboard-stat-cards, which only exists on the dashboard route
+  // — anyone who navigates elsewhere before that target loads (very common) used to have the
+  // tour reappear, mis-targeted and dead-centered, on top of whatever page they landed on
+  // instead. Restricting it to the dashboard route means it only ever shows where its own
+  // steps actually make sense, and a fast navigation away simply defers it rather than
+  // relocating it on top of unrelated controls.
+  const dashboardPath = navItems.find((n) => n.label === "Dashboard")?.path;
+  const onDashboard = dashboardPath != null && pathname === dashboardPath;
 
   const steps: TourStepDef[] = useMemo(() => {
     const list: TourStepDef[] = [
@@ -154,7 +164,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({ roleLabel, navItems }) 
     setDismissed(true);
   }, [user]);
 
-  const active = !dismissed && Boolean(user);
+  const active = !dismissed && Boolean(user) && onDashboard;
   const currentStep = active ? steps[stepIndex] : null;
   const rect = useTargetRect(currentStep?.selector ?? null);
 
