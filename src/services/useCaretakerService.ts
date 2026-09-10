@@ -10,6 +10,8 @@ const CARETAKER_URLS = {
   VERIFICATION: "/caretakers/:id/verification",
   MY_AVAILABILITY: "/caretakers/me/availability",
   AVAILABILITY_BY_ID: "/caretakers/:id/availability",
+  MY_VERIFICATION_DOCUMENTS: "/caretakers/me/verification-documents",
+  VERIFICATION_DOCUMENTS_BY_ID: "/caretakers/:id/verification-documents",
 };
 
 export interface AvailabilitySlot {
@@ -48,6 +50,22 @@ export interface CaretakerProfilePayload {
   hourlyRate?: number;
 }
 
+// Evidence (ID, certification, background-check document) a caretaker submits to back
+// their verification review — see CARETAKER_URLS.MY_VERIFICATION_DOCUMENTS /
+// VERIFICATION_DOCUMENTS_BY_ID below. Upload is caretaker-authenticated (isAuthenticated());
+// listing by caretaker ID is admin-only (CARETAKER_VERIFICATION_VIEW), so a caretaker can
+// upload their own documents but can't fetch the list back through this same endpoint.
+export interface CaretakerVerificationDocumentResponse {
+  id: number;
+  caretakerProfileId: number;
+  fileAssetId: number;
+  fileName: string;
+  fileType: string;
+  url: string;
+  uploadedBy?: number;
+  createdAt: string;
+}
+
 export const useCaretakerService = () => {
   return useMemo(
     () => ({
@@ -63,6 +81,15 @@ export const useCaretakerService = () => {
         request<CaretakerAvailabilityResponse>("PUT", CARETAKER_URLS.MY_AVAILABILITY, { slots }),
       getAvailability: (id: number) =>
         request<CaretakerAvailabilityResponse>("GET", replaceUrlParams(CARETAKER_URLS.AVAILABILITY_BY_ID, { id })),
+      uploadVerificationDocument: (file: File) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        return request<CaretakerVerificationDocumentResponse>("POST", CARETAKER_URLS.MY_VERIFICATION_DOCUMENTS, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      },
+      listVerificationDocuments: (id: number) =>
+        request<CaretakerVerificationDocumentResponse[]>("GET", replaceUrlParams(CARETAKER_URLS.VERIFICATION_DOCUMENTS_BY_ID, { id })),
     }),
     []
   );

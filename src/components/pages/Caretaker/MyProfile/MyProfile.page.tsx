@@ -11,6 +11,9 @@ import {
   FormControl,
   Select as MuiSelect,
   Checkbox as MuiCheckbox,
+  List,
+  ListItem,
+  ListItemIcon,
   ListItemText,
   Chip,
   OutlinedInput,
@@ -18,6 +21,8 @@ import {
 import BadgeIcon from "@mui/icons-material/Badge";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
+import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
+import DescriptionIcon from "@mui/icons-material/Description";
 import TextField from "../../../atoms/TextField/TextField";
 import Button from "../../../atoms/Button/Button";
 import ErrorMessage from "../../../atoms/ErrorMessage/ErrorMessage";
@@ -26,12 +31,16 @@ import { CARETAKER_VERIFICATION_STATUS_TONE } from "../../../atoms/Chip/statusTo
 import Avatar from "../../../atoms/Avatar/Avatar";
 import { ProfileSkeleton } from "../../../molecules/Skeletons/Skeletons";
 import WeeklyAvailabilityEditor from "../../../molecules/WeeklyAvailability/WeeklyAvailabilityEditor";
-import { useCaretakerService, type AvailabilitySlot } from "../../../../services/useCaretakerService";
+import {
+  useCaretakerService,
+  type AvailabilitySlot,
+  type CaretakerVerificationDocumentResponse,
+} from "../../../../services/useCaretakerService";
 import { useFileService } from "../../../../services/useFileService";
 import { useSnackbar } from "../../../../contexts/SnackbarContext";
 import { useAuthenticatedUser } from "../../../../hooks/useAuthenticatedUser";
 import { ServiceCategoryEnum, ServiceCategoryLabels } from "../../../../utils/enums";
-import { getErrorMessage } from "../../../../utils/helper";
+import { formatDateTime, getErrorMessage } from "../../../../utils/helper";
 
 const CaretakerMyProfilePage: React.FC = () => {
   const caretakerService = useCaretakerService();
@@ -55,6 +64,12 @@ const CaretakerMyProfilePage: React.FC = () => {
   const [availabilityId, setAvailabilityId] = useState<number | null>(null);
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
   const [savingAvailability, setSavingAvailability] = useState(false);
+
+  const [uploadingDocument, setUploadingDocument] = useState(false);
+  // Listing a caretaker's own submitted documents back is admin-only on the backend (see
+  // CARETAKER_URLS.VERIFICATION_DOCUMENTS_BY_ID) — this page can only show what was
+  // uploaded during the current visit, as a receipt, not a persisted history.
+  const [documentsUploadedThisSession, setDocumentsUploadedThisSession] = useState<CaretakerVerificationDocumentResponse[]>([]);
 
   useEffect(() => {
     caretakerService
@@ -100,6 +115,20 @@ const CaretakerMyProfilePage: React.FC = () => {
       showSnackbar("error", getErrorMessage(err, "Photo upload failed"));
     } finally {
       setUploadingPhoto(false);
+    }
+  };
+
+  const handleDocumentUpload = async (file: File | null | undefined) => {
+    if (!file) return;
+    setUploadingDocument(true);
+    try {
+      const document = await caretakerService.uploadVerificationDocument(file);
+      setDocumentsUploadedThisSession((docs) => [document, ...docs]);
+      showSnackbar("success", "Document uploaded — our team will review it as part of your verification.");
+    } catch (err) {
+      showSnackbar("error", getErrorMessage(err, "Document upload failed"));
+    } finally {
+      setUploadingDocument(false);
     }
   };
 
@@ -243,6 +272,46 @@ const CaretakerMyProfilePage: React.FC = () => {
                 Add the time windows you're generally available each day — families see this on your public profile.
               </Typography>
               <WeeklyAvailabilityEditor value={availability} onChange={setAvailability} disabled={savingAvailability} />
+            </CardContent>
+          </Card>
+        </Grid>
+      )}
+
+      {exists && (
+        <Grid size={12}>
+          <Card>
+            <CardContent>
+              <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+                <VerifiedUserIcon color="primary" />
+                <Typography variant="h6" fontWeight={800}>
+                  Verification Documents
+                </Typography>
+              </Stack>
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                Upload an ID, certification, or background-check document to support your verification review by our
+                admin team.
+              </Typography>
+              <Button variant="outline" component="label" startIcon={<UploadFileIcon />} loading={uploadingDocument}>
+                Upload Document
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*,application/pdf"
+                  onChange={(e) => handleDocumentUpload(e.target.files?.[0])}
+                />
+              </Button>
+              {documentsUploadedThisSession.length > 0 && (
+                <List dense disablePadding sx={{ mt: 2 }}>
+                  {documentsUploadedThisSession.map((doc) => (
+                    <ListItem key={doc.id} divider>
+                      <ListItemIcon sx={{ minWidth: 36 }}>
+                        <DescriptionIcon color="action" />
+                      </ListItemIcon>
+                      <ListItemText primary={doc.fileName} secondary={`Uploaded ${formatDateTime(doc.createdAt)}`} />
+                    </ListItem>
+                  ))}
+                </List>
+              )}
             </CardContent>
           </Card>
         </Grid>
