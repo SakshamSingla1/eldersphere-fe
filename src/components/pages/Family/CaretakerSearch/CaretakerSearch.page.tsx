@@ -150,7 +150,7 @@ const CaretakerSearchPage: React.FC = () => {
             key={`min-rate-${rateInputKey}`}
             sx={{ minWidth: 130, width: { xs: "100%", sm: "auto" } }}
             type="number"
-            label="Min $/hr"
+            label="Min ₹/hr"
             defaultValue={minRate}
             onChange={(e) => debouncedSetMinRate(e.target.value)}
             slotProps={{ htmlInput: { min: 0 } }}
@@ -159,7 +159,7 @@ const CaretakerSearchPage: React.FC = () => {
             key={`max-rate-${rateInputKey}`}
             sx={{ minWidth: 130, width: { xs: "100%", sm: "auto" } }}
             type="number"
-            label="Max $/hr"
+            label="Max ₹/hr"
             defaultValue={maxRate}
             onChange={(e) => debouncedSetMaxRate(e.target.value)}
             slotProps={{ htmlInput: { min: 0 } }}
