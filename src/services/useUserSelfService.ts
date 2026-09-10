@@ -10,6 +10,7 @@ const USER_SELF_URLS = {
   NOTIFICATION_PREFERENCES: "/users/me/notification-preferences",
   PUSH_SUBSCRIPTIONS: "/users/me/push-subscriptions",
   THEME: "/users/me/theme",
+  EXPORT: "/users/me/export",
 };
 
 // Mirrors com.eldersphere.dtos.User.UserRolesResponse.
@@ -28,6 +29,20 @@ export interface NotificationPreferenceDTO {
   emailEnabled: boolean;
   smsEnabled: boolean;
   webPushEnabled: boolean;
+}
+
+// Mirrors com.eldersphere.dtos.User.UserDataExportResponse — a "download my data" snapshot
+// aggregating the caller's own profile plus their bookings/reviews/medical
+// records/notifications. Left loosely typed (unknown) rather than re-declaring every
+// nested DTO shape here, since this is downloaded and saved as-is, not rendered field by
+// field in the UI.
+export interface UserDataExportResponse {
+  exportedAt: string;
+  profile: unknown;
+  bookings: unknown[];
+  reviews: unknown[];
+  medicalRecords: unknown[];
+  notifications: unknown[];
 }
 
 // The logged-in user's own multi-role info — full role list, and switching which
@@ -51,6 +66,7 @@ export const useUserSelfService = () => {
         request<void>("DELETE", USER_SELF_URLS.PUSH_SUBSCRIPTIONS, { endpoint }),
       getMyTheme: () => request<ActiveColorTheme>("GET", USER_SELF_URLS.THEME),
       setMyTheme: (themeId: number | null) => request<ActiveColorTheme>("PUT", USER_SELF_URLS.THEME, { themeId }),
+      exportMyData: () => request<UserDataExportResponse>("GET", USER_SELF_URLS.EXPORT),
     }),
     []
   );

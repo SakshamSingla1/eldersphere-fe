@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, Typography, Stack, Grid, Divider } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
+import DownloadIcon from "@mui/icons-material/Download";
 import PageHeader from "../../molecules/PageHeader/PageHeader";
 import TextField from "../../atoms/TextField/TextField";
 import Button from "../../atoms/Button/Button";
@@ -8,6 +9,7 @@ import ErrorMessage from "../../atoms/ErrorMessage/ErrorMessage";
 import NotificationPreferences from "../../molecules/NotificationPreferences/NotificationPreferences";
 import ThemePicker from "../../molecules/ThemePicker/ThemePicker";
 import { useAuthService } from "../../../services/useAuthService";
+import { useUserSelfService } from "../../../services/useUserSelfService";
 import { useAuthenticatedUser } from "../../../hooks/useAuthenticatedUser";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
 import { REGEX } from "../../../utils/constant";
@@ -21,6 +23,7 @@ import { getErrorMessage } from "../../../utils/helper";
 const AccountSettingsPage: React.FC = () => {
   const { user } = useAuthenticatedUser();
   const authService = useAuthService();
+  const userSelfService = useUserSelfService();
   const { showSnackbar } = useSnackbar();
 
   const [oldPassword, setOldPassword] = useState("");
@@ -28,6 +31,26 @@ const AccountSettingsPage: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportData = async () => {
+    setExporting(true);
+    try {
+      const data = await userSelfService.exportMyData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `eldersphere-data-export-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showSnackbar("success", "Your data export has been downloaded.");
+    } catch (err) {
+      showSnackbar("error", getErrorMessage(err, "Could not generate your data export"));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,6 +154,23 @@ const AccountSettingsPage: React.FC = () => {
       </Grid>
       <Grid size={12}>
         <NotificationPreferences />
+      </Grid>
+      <Grid size={12}>
+        <Card>
+          <CardContent>
+            <Typography variant="h6" fontWeight={800} gutterBottom>
+              Your Data
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+            <Typography variant="body2" color="text.secondary" mb={2} maxWidth={520}>
+              Download a copy of your account data — profile, bookings, reviews, medical records, and
+              notifications — as a JSON file.
+            </Typography>
+            <Button variant="outline" startIcon={<DownloadIcon />} onClick={handleExportData} loading={exporting}>
+              Download My Data
+            </Button>
+          </CardContent>
+        </Card>
       </Grid>
     </Grid>
   );
