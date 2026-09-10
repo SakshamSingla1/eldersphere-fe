@@ -1,44 +1,23 @@
 import React, { useState } from "react";
-import { Card, CardContent, Typography, Stack, Grid, Alert } from "@mui/material";
+import { Card, CardContent, Typography, Stack, Alert } from "@mui/material";
 import ElderlyIcon from "@mui/icons-material/Elderly";
 import PageHeader from "../../molecules/PageHeader/PageHeader";
 import KeyValueGrid from "../../molecules/KeyValueGrid/KeyValueGrid";
 import ConfirmableButton from "../../atoms/ConfirmableButton/ConfirmableButton";
-import TextField from "../../atoms/TextField/TextField";
-import Button from "../../atoms/Button/Button";
-import ErrorMessage from "../../atoms/ErrorMessage/ErrorMessage";
+import ElderProfileSearchAutocomplete from "../../molecules/ElderProfileSearchAutocomplete/ElderProfileSearchAutocomplete";
 import { useElderProfileService, type ElderProfileResponse } from "../../../services/useElderProfileService";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
 import { formatDate, getErrorMessage } from "../../../utils/helper";
 
 // Note: ElderProfileController has no admin "list all" endpoint — its GET / is scoped to
 // the authenticated family user's own elders (via JWT), which returns nothing for an
-// admin account. This page is therefore a lookup-by-ID tool (the ID is visible from
-// Admin > Bookings / Medical Records rows) rather than a full listing + CrudModule table.
+// admin account. This page is therefore a find-by-name tool (via GET /elder-profiles/search)
+// rather than a full listing + CrudModule table.
 const AdminElderProfilesPage: React.FC = () => {
   const elderProfileService = useElderProfileService();
   const { showSnackbar } = useSnackbar();
 
-  const [idInput, setIdInput] = useState("");
   const [profile, setProfile] = useState<ElderProfileResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  const handleLookup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!idInput) return;
-    setError(null);
-    setLoading(true);
-    try {
-      const result = await elderProfileService.getById(Number(idInput));
-      setProfile(result);
-    } catch (err) {
-      setProfile(null);
-      setError(getErrorMessage(err, "Elder profile not found"));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDelete = async () => {
     if (!profile) return;
@@ -56,18 +35,16 @@ const AdminElderProfilesPage: React.FC = () => {
     <div>
       <PageHeader icon={<ElderlyIcon color="primary" />} title="Elder Profile Lookup" />
       <Alert severity="info" sx={{ mb: 2 }}>
-        The backend only exposes elder profiles scoped to the owning family member, so admins look one up by ID
-        (visible from Bookings or Medical Records) rather than browsing a full list.
+        The backend only exposes elder profiles scoped to the owning family member, so admins find one by name here
+        rather than browsing a full list.
       </Alert>
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <ErrorMessage message={error} />
-          <Stack direction="row" spacing={2} component="form" onSubmit={handleLookup}>
-            <TextField label="Elder Profile ID" type="number" value={idInput} onChange={(e) => setIdInput(e.target.value)} />
-            <Button type="submit" variant="primary" loading={loading}>
-              Look Up
-            </Button>
-          </Stack>
+          <ElderProfileSearchAutocomplete
+            label="Find an elder profile"
+            placeholder="Search by name"
+            onSelect={setProfile}
+          />
         </CardContent>
       </Card>
 

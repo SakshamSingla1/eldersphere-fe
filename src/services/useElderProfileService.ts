@@ -1,13 +1,14 @@
 import { useMemo } from "react";
 import { request } from ".";
 import { replaceUrlParams } from "../utils/helper";
-import type { AuditableResponse } from "../utils/types";
+import type { AuditableResponse, PageResponse } from "../utils/types";
 import type { GenderEnum } from "../utils/enums";
 
 const ELDER_URLS = {
   BASE: "/elder-profiles",
   BY_ID: "/elder-profiles/:id",
   ME: "/elder-profiles/me",
+  SEARCH: "/elder-profiles/search",
 };
 
 export interface ElderProfileResponse extends AuditableResponse {
@@ -51,6 +52,10 @@ export const useElderProfileService = () => {
       // Called by a logged-in ELDER user to fetch their own self-managed profile.
       getMyProfile: () => request<ElderProfileResponse>("GET", ELDER_URLS.ME),
       remove: (id: number) => request<string>("DELETE", replaceUrlParams(ELDER_URLS.BY_ID, { id })),
+      // Admin-only "find an elder profile by name" picker — see ELDER_URLS.SEARCH. Used
+      // instead of requiring an admin to already know a profile's numeric ID.
+      searchByName: (query: string, page = 0, size = 10) =>
+        request<PageResponse<ElderProfileResponse>>("GET", ELDER_URLS.SEARCH, null, { params: { query, page, size } }),
     }),
     []
   );
