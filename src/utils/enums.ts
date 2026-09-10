@@ -152,6 +152,12 @@ export const DayOfWeekShortLabels: Record<DayOfWeekEnum, string> = {
   SUNDAY: "Sun",
 };
 
+export const NavLinkStatusEnum = {
+  ACTIVE: "ACTIVE",
+  INACTIVE: "INACTIVE",
+} as const;
+export type NavLinkStatusEnum = (typeof NavLinkStatusEnum)[keyof typeof NavLinkStatusEnum];
+
 export const GenderEnum = {
   MALE: "MALE",
   FEMALE: "FEMALE",

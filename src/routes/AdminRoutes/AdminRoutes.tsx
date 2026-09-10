@@ -1,24 +1,10 @@
 import React, { Suspense, lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import PeopleIcon from "@mui/icons-material/People";
-import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
-import ElderlyIcon from "@mui/icons-material/Elderly";
-import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
-import EventNoteIcon from "@mui/icons-material/EventNote";
-import FolderSharedIcon from "@mui/icons-material/FolderShared";
-import RateReviewIcon from "@mui/icons-material/RateReview";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import WebIcon from "@mui/icons-material/Web";
-import ContactMailIcon from "@mui/icons-material/ContactMail";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
-import TuneIcon from "@mui/icons-material/Tune";
-import InsightsIcon from "@mui/icons-material/Insights";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import Loader from "../../components/atoms/Loader/Loader";
-import type { SidebarNavItem } from "../../components/molecules/Sidebar/Sidebar";
 import ProtectedRoute from "../ProtectedRoute";
 import { useAuthenticatedUser } from "../../hooks/useAuthenticatedUser";
+import { useSidebarNavItems } from "../../hooks/useSidebarNavItems";
 import { UserTypeEnum } from "../../utils/enums";
 
 // Each admin page is its own lazy chunk — the AdminRoutes chunk previously bundled every
@@ -39,6 +25,7 @@ const AdminLandingManagementPage = lazy(() => import("../../components/pages/Adm
 const AdminContactUsPage = lazy(() => import("../../components/pages/Admin/ContactUs.page"));
 const AdminRolesPermissionsPage = lazy(() => import("../../components/pages/Admin/RolesPermissions.page"));
 const AdminPlatformSettingsPage = lazy(() => import("../../components/pages/Admin/PlatformSettings.page"));
+const AdminNavLinksPage = lazy(() => import("../../components/pages/Admin/NavLinks.page"));
 const AccountSettingsPage = lazy(() => import("../../components/pages/Shared/AccountSettings.page"));
 
 // Add/Edit form PAGES for the CrudModule-based listings above — each its own lazy chunk,
@@ -55,43 +42,23 @@ const AdminPermissionFormPage = lazy(() => import("../../components/pages/Admin/
 const AdminLandingFeatureFormPage = lazy(() => import("../../components/pages/Admin/LandingFeatureForm.page"));
 const AdminLandingFaqFormPage = lazy(() => import("../../components/pages/Admin/LandingFaqForm.page"));
 const AdminLandingTestimonialFormPage = lazy(() => import("../../components/pages/Admin/LandingTestimonialForm.page"));
+const AdminNavLinkFormPage = lazy(() => import("../../components/pages/Admin/NavLinkForm.page"));
 
-// Roles & Permissions and Platform Settings are gated to SUPER_ADMIN on the backend
-// (RoleController / PermissionController / PlatformSettingsController all require
-// hasRole('SUPER_ADMIN'), which the role hierarchy does NOT widen from ADMIN) — a plain
-// ADMIN would get a 403 hitting either, so those two nav entries and routes are hidden/
-// guarded for ADMIN sessions. Admin-account creation (via Users) has no such backend
-// split (AdminController is hasRole('ADMIN'), which SUPER_ADMIN also satisfies), so it
-// stays visible to both.
-interface AdminNavItem extends SidebarNavItem {
-  superAdminOnly?: boolean;
-}
-
-// Grouped into labeled sections (see Sidebar's `group` support) so the ~13-item flat list
-// (a "wall of text") reads as a few clear clusters instead — routes and item set are
-// unchanged, only the order/grouping for display. Order below is the display order, so
-// items are listed in group-contiguous order rather than the original flat order.
-const NAV_ITEMS: AdminNavItem[] = [
-  { label: "Dashboard", path: "/admin/dashboard", icon: <DashboardIcon />, group: "Overview" },
-  { label: "Analytics", path: "/admin/analytics", icon: <InsightsIcon />, group: "Overview" },
-  { label: "Users", path: "/admin/users", icon: <PeopleIcon />, group: "Care Operations" },
-  { label: "Caretaker Verification", path: "/admin/caretaker-verification", icon: <VerifiedUserIcon />, group: "Care Operations" },
-  { label: "Elder Profiles", path: "/admin/elder-profiles", icon: <ElderlyIcon />, group: "Care Operations" },
-  { label: "Services", path: "/admin/services", icon: <MedicalServicesIcon />, group: "Care Operations" },
-  { label: "Bookings", path: "/admin/bookings", icon: <EventNoteIcon />, group: "Care Operations" },
-  { label: "Medical Records", path: "/admin/medical-records", icon: <FolderSharedIcon />, group: "Care Operations" },
-  { label: "Reviews", path: "/admin/reviews", icon: <RateReviewIcon />, group: "Care Operations" },
-  { label: "Emergency Alerts", path: "/admin/emergency-alerts", icon: <WarningAmberIcon />, group: "Care Operations" },
-  { label: "Landing Management", path: "/admin/landing-management", icon: <WebIcon />, group: "Content" },
-  { label: "Contact Us", path: "/admin/contact-us", icon: <ContactMailIcon />, group: "Content" },
-  { label: "Roles & Permissions", path: "/admin/roles-permissions", icon: <AdminPanelSettingsIcon />, superAdminOnly: true, group: "Platform" },
-  { label: "Platform Settings", path: "/admin/platform-settings", icon: <TuneIcon />, superAdminOnly: true, group: "Platform" },
-];
-
+// The sidebar itself is DB-backed (see NavLinkController / useSidebarNavItems) and already
+// resolves super-admin-only and required-permission gates server-side (AdminPermissionGuard)
+// — a plain ADMIN's fetched list never includes a super-admin-only item, so no client-side
+// filtering happens here. Roles & Permissions, Platform Settings, and Navigation Links are
+// still additionally wrapped in ProtectedRoute below: the sidebar controls what's *shown*,
+// this controls what's *reachable* by URL — the same defense-in-depth the backend routes
+// enforce (RoleController/PermissionController/PlatformSettingsController/NavLinkController
+// admin-write-routes are all hasRole('SUPER_ADMIN'), which the role hierarchy does not widen
+// from ADMIN, so a plain ADMIN hitting either would get a 403 regardless).
 const AdminRoutes: React.FC = () => {
   const { user } = useAuthenticatedUser();
+  const { navItems, loading } = useSidebarNavItems();
   const isSuperAdmin = user?.userType === UserTypeEnum.SUPER_ADMIN;
-  const navItems = NAV_ITEMS.filter((item) => !item.superAdminOnly || isSuperAdmin);
+
+  if (loading) return <Loader minHeight="100vh" />;
 
   return (
     <Suspense fallback={<Loader minHeight="60vh" />}>
@@ -166,6 +133,30 @@ const AdminRoutes: React.FC = () => {
             element={
               <ProtectedRoute allowedUserTypes={[UserTypeEnum.SUPER_ADMIN]}>
                 <AdminPlatformSettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="nav-links"
+            element={
+              <ProtectedRoute allowedUserTypes={[UserTypeEnum.SUPER_ADMIN]}>
+                <AdminNavLinksPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="nav-links/new"
+            element={
+              <ProtectedRoute allowedUserTypes={[UserTypeEnum.SUPER_ADMIN]}>
+                <AdminNavLinkFormPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="nav-links/:id/edit"
+            element={
+              <ProtectedRoute allowedUserTypes={[UserTypeEnum.SUPER_ADMIN]}>
+                <AdminNavLinkFormPage />
               </ProtectedRoute>
             }
           />

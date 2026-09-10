@@ -1,20 +1,8 @@
 import React, { Suspense, lazy } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import PeopleIcon from "@mui/icons-material/People";
-import SearchIcon from "@mui/icons-material/Search";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import EventNoteIcon from "@mui/icons-material/EventNote";
-import FolderSharedIcon from "@mui/icons-material/FolderShared";
-import RateReviewIcon from "@mui/icons-material/RateReview";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import MailOutlineIcon from "@mui/icons-material/MailOutline";
-import SettingsIcon from "@mui/icons-material/Settings";
 import DashboardLayout from "../../layouts/DashboardLayout";
 import Loader from "../../components/atoms/Loader/Loader";
-import type { SidebarNavItem } from "../../components/molecules/Sidebar/Sidebar";
+import { useSidebarNavItems } from "../../hooks/useSidebarNavItems";
 
 // Lazy per-page chunks — see AdminRoutes.tsx for rationale.
 const FamilyDashboardPage = lazy(() => import("../../components/pages/Family/Dashboard/Dashboard.page"));
@@ -36,49 +24,39 @@ const NotificationsPage = lazy(() => import("../../components/pages/Shared/Notif
 const MessagesPage = lazy(() => import("../../components/pages/Shared/Messages.page"));
 const AccountSettingsPage = lazy(() => import("../../components/pages/Shared/AccountSettings.page"));
 
-const NAV_ITEMS: SidebarNavItem[] = [
-  { label: "Dashboard", path: "/family/dashboard", icon: <DashboardIcon /> },
-  { label: "Elder Profiles", path: "/family/elder-profiles", icon: <PeopleIcon /> },
-  { label: "Invites", path: "/family/invites", icon: <MailOutlineIcon /> },
-  { label: "Find a Caretaker", path: "/family/caretakers", icon: <SearchIcon /> },
-  { label: "My Favorites", path: "/family/favorites", icon: <FavoriteIcon /> },
-  { label: "My Bookings", path: "/family/bookings", icon: <EventNoteIcon /> },
-  { label: "Medical Records", path: "/family/medical-records", icon: <FolderSharedIcon /> },
-  { label: "Reviews", path: "/family/reviews", icon: <RateReviewIcon /> },
-  { label: "Messages", path: "/family/messages", icon: <ChatBubbleOutlineIcon /> },
-  { label: "Notifications", path: "/family/notifications", icon: <NotificationsIcon /> },
-  { label: "Emergency", path: "/family/emergency", icon: <WarningAmberIcon /> },
-  { label: "Settings", path: "/family/settings", icon: <SettingsIcon /> },
-];
+const FamilyRoutes: React.FC = () => {
+  const { navItems, loading } = useSidebarNavItems();
+  if (loading) return <Loader minHeight="100vh" />;
 
-const FamilyRoutes: React.FC = () => (
-  <Suspense fallback={<Loader minHeight="60vh" />}>
-    <Routes>
-      <Route element={<DashboardLayout navItems={NAV_ITEMS} roleLabel="Family" settingsPath="/family/settings" />}>
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<FamilyDashboardPage />} />
-        <Route path="elder-profiles" element={<ElderProfilesPage />} />
-        <Route path="elder-profiles/new" element={<ElderProfilesFormPage />} />
-        <Route path="elder-profiles/:id/edit" element={<ElderProfilesFormPage />} />
-        <Route path="elder-profiles/link" element={<LinkElderProfilePage />} />
-        <Route path="invites" element={<FamilyInvitesPage />} />
-        <Route path="caretakers" element={<CaretakerSearchPage />} />
-        <Route path="caretakers/:id" element={<CaretakerProfileViewPage />} />
-        <Route path="favorites" element={<FavoritesPage />} />
-        <Route path="bookings" element={<FamilyBookingsPage />} />
-        <Route path="bookings/:id" element={<BookingDetailPage />} />
-        <Route path="medical-records" element={<FamilyMedicalRecordsPage />} />
-        <Route path="medical-records/new" element={<FamilyMedicalRecordFormPage />} />
-        <Route path="medical-records/:id" element={<MedicalRecordDetailPage />} />
-        <Route path="reviews" element={<FamilyReviewsPage />} />
-        <Route path="messages" element={<MessagesPage />} />
-        <Route path="notifications" element={<NotificationsPage />} />
-        <Route path="emergency" element={<FamilyEmergencyPage />} />
-        <Route path="settings" element={<AccountSettingsPage />} />
-        <Route path="*" element={<Navigate to="dashboard" replace />} />
-      </Route>
-    </Routes>
-  </Suspense>
-);
+  return (
+    <Suspense fallback={<Loader minHeight="60vh" />}>
+      <Routes>
+        <Route element={<DashboardLayout navItems={navItems} roleLabel="Family" settingsPath="/family/settings" />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<FamilyDashboardPage />} />
+          <Route path="elder-profiles" element={<ElderProfilesPage />} />
+          <Route path="elder-profiles/new" element={<ElderProfilesFormPage />} />
+          <Route path="elder-profiles/:id/edit" element={<ElderProfilesFormPage />} />
+          <Route path="elder-profiles/link" element={<LinkElderProfilePage />} />
+          <Route path="invites" element={<FamilyInvitesPage />} />
+          <Route path="caretakers" element={<CaretakerSearchPage />} />
+          <Route path="caretakers/:id" element={<CaretakerProfileViewPage />} />
+          <Route path="favorites" element={<FavoritesPage />} />
+          <Route path="bookings" element={<FamilyBookingsPage />} />
+          <Route path="bookings/:id" element={<BookingDetailPage />} />
+          <Route path="medical-records" element={<FamilyMedicalRecordsPage />} />
+          <Route path="medical-records/new" element={<FamilyMedicalRecordFormPage />} />
+          <Route path="medical-records/:id" element={<MedicalRecordDetailPage />} />
+          <Route path="reviews" element={<FamilyReviewsPage />} />
+          <Route path="messages" element={<MessagesPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="emergency" element={<FamilyEmergencyPage />} />
+          <Route path="settings" element={<AccountSettingsPage />} />
+          <Route path="*" element={<Navigate to="dashboard" replace />} />
+        </Route>
+      </Routes>
+    </Suspense>
+  );
+};
 
 export default FamilyRoutes;
