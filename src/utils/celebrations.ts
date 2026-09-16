@@ -50,3 +50,22 @@ export const checkVerificationMilestone = (userId: number, currentStatus: string
     return false;
   }
 };
+
+/**
+ * Detects a booking's status flipping to CONFIRMED since the last time this ran on this
+ * device (confirmation is a caretaker/admin-side action, so the only way the family
+ * member's browser finds out is by comparing against what it last saw for this booking).
+ * Keyed by booking id rather than user id, since it's the booking's own lifecycle being
+ * tracked. Always records the current status — including the very first call, which never
+ * celebrates on its own (nothing to compare against yet) even if already confirmed.
+ */
+export const checkBookingConfirmedMilestone = (bookingId: number, currentStatus: string): boolean => {
+  const key = keyFor("bookingConfirmed", bookingId);
+  try {
+    const previous = localStorage.getItem(key);
+    localStorage.setItem(key, currentStatus);
+    return previous !== null && previous !== "CONFIRMED" && currentStatus === "CONFIRMED";
+  } catch {
+    return false;
+  }
+};

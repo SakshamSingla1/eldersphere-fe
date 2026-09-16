@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import {
   AppBar,
@@ -12,13 +12,12 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Chip,
   Stack,
   Divider,
   Link as MuiLink,
 } from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
@@ -43,12 +42,11 @@ import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import StarIcon from "@mui/icons-material/Star";
 import BarChartIcon from "@mui/icons-material/BarChart";
-import RatingDisplay from "../../atoms/RatingDisplay/RatingDisplay";
 import HeroScene from "../../molecules/HeroScene/HeroScene";
+import TestimonialsCarousel from "../../molecules/TestimonialsCarousel/TestimonialsCarousel";
 import Button from "../../atoms/Button/Button";
 import TextField from "../../atoms/TextField/TextField";
 import ErrorMessage from "../../atoms/ErrorMessage/ErrorMessage";
-import Avatar from "../../atoms/Avatar/Avatar";
 import { useLandingService, type LandingPageResponse } from "../../../services/useLandingService";
 import { useContactUsService } from "../../../services/useContactUsService";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
@@ -137,6 +135,18 @@ const fadeUpReveal = (idx: number) => ({
   transition: { duration: 0.45, delay: idx * 0.07, ease: "easeOut" as const },
 });
 
+// Hero-only stagger: the headline, subheadline and CTA buttons reveal one after another
+// instead of as one flat block, so the very first thing a visitor sees has a bit more
+// choreography than the rest of the (whileInView-driven) page below the fold.
+const heroStagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } },
+};
+const heroStaggerItem = {
+  hidden: { opacity: 0, y: 24 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } },
+};
+
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "How It Works", href: "#how-it-works" },
@@ -150,6 +160,19 @@ const Landing: React.FC = () => {
   const landingService = useLandingService();
   const contactUsService = useContactUsService();
   const { showSnackbar } = useSnackbar();
+  const prefersReducedMotion = useReducedMotion();
+
+  // Scroll-linked parallax, scoped to the hero only: as the visitor scrolls the hero out
+  // of view, its content gently recedes (fades/shrinks slightly) while the two decorative
+  // blobs and the hero illustration drift at slightly different speeds for a subtle sense
+  // of depth. Collapses to a no-op range under prefers-reduced-motion rather than just
+  // running at full strength.
+  const heroRef = useRef<HTMLDivElement | null>(null);
+  const { scrollYProgress: heroScrollProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const heroContentOpacity = useTransform(heroScrollProgress, [0, 1], [1, prefersReducedMotion ? 1 : 0.35]);
+  const heroSceneParallaxY = useTransform(heroScrollProgress, [0, 1], [0, prefersReducedMotion ? 0 : 50]);
+  const blobOneParallaxY = useTransform(heroScrollProgress, [0, 1], [0, prefersReducedMotion ? 0 : -70]);
+  const blobTwoParallaxY = useTransform(heroScrollProgress, [0, 1], [0, prefersReducedMotion ? 0 : 70]);
 
   const [page, setPage] = useState<LandingPageResponse | null>(null);
   const [contactForm, setContactForm] = useState({ name: "", email: "", phone: "", message: "" });
@@ -215,6 +238,7 @@ const Landing: React.FC = () => {
 
       {/* Hero */}
       <Box
+        ref={heroRef}
         sx={{
           position: "relative",
           overflow: "hidden",
@@ -226,94 +250,109 @@ const Landing: React.FC = () => {
             framer-motion runtime cost on a page that's mostly static text/cards. Disabled
             entirely for prefers-reduced-motion, per the media query below, rather than
             just slowed down — a slowly-breathing background is still motion some elder
-            users may want off completely. */}
-        <Box
-          sx={{
-            position: "absolute",
-            top: -120,
-            right: -120,
-            width: 420,
-            height: 420,
-            borderRadius: "50%",
-            background: `radial-gradient(closest-side, ${alpha(theme.palette.secondary.main, 0.18)}, ${alpha(theme.palette.secondary.main, 0)})`,
-            display: { xs: "none", md: "block" },
-            animation: "eldersphere-blob-float-1 14s ease-in-out infinite",
-            "@media (prefers-reduced-motion: reduce)": { animation: "none" },
-            "@keyframes eldersphere-blob-float-1": {
-              "0%, 100%": { transform: "translate(0, 0) scale(1)" },
-              "50%": { transform: "translate(-24px, 28px) scale(1.08)" },
-            },
-          }}
-        />
-        <Box
-          sx={{
-            position: "absolute",
-            bottom: -160,
-            left: -160,
-            width: 460,
-            height: 460,
-            borderRadius: "50%",
-            background: `radial-gradient(closest-side, ${alpha(theme.palette.primary.main, 0.14)}, ${alpha(theme.palette.primary.main, 0)})`,
-            display: { xs: "none", md: "block" },
-            animation: "eldersphere-blob-float-2 18s ease-in-out infinite",
-            "@media (prefers-reduced-motion: reduce)": { animation: "none" },
-            "@keyframes eldersphere-blob-float-2": {
-              "0%, 100%": { transform: "translate(0, 0) scale(1)" },
-              "50%": { transform: "translate(30px, -22px) scale(1.06)" },
-            },
-          }}
-        />
+            users may want off completely. Each is also wrapped in a motion.div driven by
+            scroll progress for a subtle parallax drift as the hero scrolls out of view. */}
+        <motion.div style={{ y: blobOneParallaxY }}>
+          <Box
+            sx={{
+              position: "absolute",
+              top: -120,
+              right: -120,
+              width: 420,
+              height: 420,
+              borderRadius: "50%",
+              background: `radial-gradient(closest-side, ${alpha(theme.palette.secondary.main, 0.18)}, ${alpha(theme.palette.secondary.main, 0)})`,
+              display: { xs: "none", md: "block" },
+              animation: "eldersphere-blob-float-1 14s ease-in-out infinite",
+              "@media (prefers-reduced-motion: reduce)": { animation: "none" },
+              "@keyframes eldersphere-blob-float-1": {
+                "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+                "50%": { transform: "translate(-24px, 28px) scale(1.08)" },
+              },
+            }}
+          />
+        </motion.div>
+        <motion.div style={{ y: blobTwoParallaxY }}>
+          <Box
+            sx={{
+              position: "absolute",
+              bottom: -160,
+              left: -160,
+              width: 460,
+              height: 460,
+              borderRadius: "50%",
+              background: `radial-gradient(closest-side, ${alpha(theme.palette.primary.main, 0.14)}, ${alpha(theme.palette.primary.main, 0)})`,
+              display: { xs: "none", md: "block" },
+              animation: "eldersphere-blob-float-2 18s ease-in-out infinite",
+              "@media (prefers-reduced-motion: reduce)": { animation: "none" },
+              "@keyframes eldersphere-blob-float-2": {
+                "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+                "50%": { transform: "translate(30px, -22px) scale(1.06)" },
+              },
+            }}
+          />
+        </motion.div>
         <Container maxWidth="lg" sx={{ position: "relative" }}>
-          <Grid container spacing={6} alignItems="center">
-            <Grid size={{ xs: 12, md: 7 }}>
-              <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }}>
-                <Typography variant="h2" component="h1" fontWeight={800} gutterBottom sx={{ fontSize: { xs: 34, md: 48 } }}>
-                  {config?.heroHeadline || "Compassionate Care, Right at Home"}
-                </Typography>
-                <Typography variant="h6" color="text.secondary" fontWeight={400} sx={{ mb: 4 }}>
-                  {config?.heroSubheadline ||
-                    "Connect your loved ones with verified, professional caretakers. Book services, manage health records, and get emergency help — all in one place."}
-                </Typography>
-                <Stack direction="row" spacing={2}>
-                  <Button variant="primary" size="large" component={RouterLink} to="/register">
-                    Get Started Free
-                  </Button>
-                  <Button variant="outline" size="large" href="#how-it-works">
-                    See How It Works
-                  </Button>
-                </Stack>
-              </motion.div>
-            </Grid>
-            <Grid size={{ xs: 12, md: 5 }}>
-              <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7, ease: "easeOut" }}>
-                <HeroScene />
-              </motion.div>
-            </Grid>
-          </Grid>
-
-          {/* Stat strip — moved out from under the preview card into its own row so both
-              the visual and the numbers get full width to breathe. */}
-          <Grid container spacing={2} sx={{ mt: { xs: 5, md: 7 } }}>
-            {STATS.map((s, idx) => (
-              <Grid size={{ xs: 6, md: 3 }} key={s.label}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.15 + idx * 0.08, ease: "easeOut" }}
-                  whileHover={{ y: -3 }}
-                >
-                  <Card sx={{ textAlign: "center", py: 3 }}>
-                    <Typography variant="h4" fontWeight={800} color="primary.main">
-                      {s.value}
+          <motion.div style={{ opacity: heroContentOpacity }}>
+            <Grid container spacing={6} alignItems="center">
+              <Grid size={{ xs: 12, md: 7 }}>
+                <motion.div variants={heroStagger} initial="hidden" animate="show">
+                  <motion.div variants={heroStaggerItem}>
+                    <Typography variant="h2" component="h1" fontWeight={800} gutterBottom sx={{ fontSize: { xs: 34, md: 48 } }}>
+                      {config?.heroHeadline || "Compassionate Care, Right at Home"}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {s.label}
+                  </motion.div>
+                  <motion.div variants={heroStaggerItem}>
+                    <Typography variant="h6" color="text.secondary" fontWeight={400} sx={{ mb: 4 }}>
+                      {config?.heroSubheadline ||
+                        "Connect your loved ones with verified, professional caretakers. Book services, manage health records, and get emergency help — all in one place."}
                     </Typography>
-                  </Card>
+                  </motion.div>
+                  <motion.div variants={heroStaggerItem}>
+                    <Stack direction="row" spacing={2}>
+                      <Button variant="primary" size="large" component={RouterLink} to="/register">
+                        Get Started Free
+                      </Button>
+                      <Button variant="outline" size="large" href="#how-it-works">
+                        See How It Works
+                      </Button>
+                    </Stack>
+                  </motion.div>
                 </motion.div>
               </Grid>
-            ))}
-          </Grid>
+              <Grid size={{ xs: 12, md: 5 }}>
+                <motion.div style={{ y: heroSceneParallaxY }}>
+                  <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.7, ease: "easeOut" }}>
+                    <HeroScene />
+                  </motion.div>
+                </motion.div>
+              </Grid>
+            </Grid>
+
+            {/* Stat strip — moved out from under the preview card into its own row so both
+                the visual and the numbers get full width to breathe. */}
+            <Grid container spacing={2} sx={{ mt: { xs: 5, md: 7 } }}>
+              {STATS.map((s, idx) => (
+                <Grid size={{ xs: 6, md: 3 }} key={s.label}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.15 + idx * 0.08, ease: "easeOut" }}
+                    whileHover={{ y: -3 }}
+                  >
+                    <Card sx={{ textAlign: "center", py: 3 }}>
+                      <Typography variant="h4" fontWeight={800} color="primary.main">
+                        {s.value}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {s.label}
+                      </Typography>
+                    </Card>
+                  </motion.div>
+                </Grid>
+              ))}
+            </Grid>
+          </motion.div>
         </Container>
       </Box>
 
@@ -439,38 +478,16 @@ const Landing: React.FC = () => {
       {testimonials.length > 0 && (
         <Box sx={{ bgcolor: "background.default", py: 10 }} id="testimonials">
           <Container maxWidth="lg">
-            <Box textAlign="center" mb={6}>
-              <Typography variant="h3" component="h2" fontWeight={800} sx={{ fontSize: { xs: 28, md: 36 } }}>
-                Loved by Families &amp; Caretakers
-              </Typography>
-            </Box>
-            <Grid container spacing={3}>
-              {testimonials.map((t, idx) => (
-                <Grid size={{ xs: 12, md: 4 }} key={t.id}>
-                  <motion.div {...fadeUpReveal(idx)} style={{ height: "100%" }} whileHover={{ y: -4 }}>
-                    <Card sx={{ height: "100%", p: 2 }}>
-                      <CardContent>
-                        {t.rating != null && <RatingDisplay value={t.rating} />}
-                        <Typography variant="body1" sx={{ my: 2, fontStyle: "italic" }}>
-                          "{t.content}"
-                        </Typography>
-                        <Stack direction="row" spacing={1.5} alignItems="center">
-                          <Avatar src={t.avatarUrl ?? undefined} name={t.authorName} seed={t.id} />
-                          <Box>
-                            <Typography fontWeight={700}>{t.authorName}</Typography>
-                            {t.authorRole && (
-                              <Typography variant="body2" color="text.secondary">
-                                {t.authorRole}
-                              </Typography>
-                            )}
-                          </Box>
-                        </Stack>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                </Grid>
-              ))}
-            </Grid>
+            <motion.div {...fadeUpReveal(0)}>
+              <Box textAlign="center" mb={6}>
+                <Typography variant="h3" component="h2" fontWeight={800} sx={{ fontSize: { xs: 28, md: 36 } }}>
+                  Loved by Families &amp; Caretakers
+                </Typography>
+              </Box>
+            </motion.div>
+            <motion.div {...fadeUpReveal(1)}>
+              <TestimonialsCarousel testimonials={testimonials} />
+            </motion.div>
           </Container>
         </Box>
       )}
@@ -478,13 +495,15 @@ const Landing: React.FC = () => {
       {/* FAQ */}
       {faqs.length > 0 && (
         <Container maxWidth="md" id="faq" sx={{ py: 10 }}>
-          <Box textAlign="center" mb={6}>
-            <Typography variant="h3" component="h2" fontWeight={800} sx={{ fontSize: { xs: 28, md: 36 } }}>
-              Frequently Asked Questions
-            </Typography>
-          </Box>
+          <motion.div {...fadeUpReveal(0)}>
+            <Box textAlign="center" mb={6}>
+              <Typography variant="h3" component="h2" fontWeight={800} sx={{ fontSize: { xs: 28, md: 36 } }}>
+                Frequently Asked Questions
+              </Typography>
+            </Box>
+          </motion.div>
           {faqs.map((faq, idx) => (
-            <motion.div {...fadeUpReveal(idx)} key={faq.id}>
+            <motion.div {...fadeUpReveal(idx + 1)} key={faq.id}>
               <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Typography fontWeight={700}>{faq.question}</Typography>
@@ -501,75 +520,81 @@ const Landing: React.FC = () => {
       {/* CTA */}
       <Box sx={{ bgcolor: "primary.main", color: "white", py: 8 }}>
         <Container maxWidth="md" sx={{ textAlign: "center" }}>
-          <Typography variant="h4" component="h2" fontWeight={800} gutterBottom>
-            {config?.ctaHeadline || "Give Your Loved Ones the Care They Deserve"}
-          </Typography>
-          <Typography sx={{ mb: 4, opacity: 0.9 }}>
-            {config?.ctaDescription ||
-              "Join thousands of families who trust ElderSphere for professional, compassionate elderly care."}
-          </Typography>
-          <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap">
-            <Button
-              variant="secondary"
-              size="large"
-              component={RouterLink}
-              to="/register"
-            >
-              {config?.ctaButtonText || "Get Started Free"}
-            </Button>
-            <Button variant="outline" size="large" href="#contact" sx={{ color: "white", borderColor: "white" }}>
-              Call Us Now
-            </Button>
-          </Stack>
+          <motion.div {...fadeUpReveal(0)}>
+            <Typography variant="h4" component="h2" fontWeight={800} gutterBottom>
+              {config?.ctaHeadline || "Give Your Loved Ones the Care They Deserve"}
+            </Typography>
+            <Typography sx={{ mb: 4, opacity: 0.9 }}>
+              {config?.ctaDescription ||
+                "Join thousands of families who trust ElderSphere for professional, compassionate elderly care."}
+            </Typography>
+            <Stack direction="row" spacing={2} justifyContent="center" flexWrap="wrap">
+              <Button
+                variant="secondary"
+                size="large"
+                component={RouterLink}
+                to="/register"
+              >
+                {config?.ctaButtonText || "Get Started Free"}
+              </Button>
+              <Button variant="outline" size="large" href="#contact" sx={{ color: "white", borderColor: "white" }}>
+                Call Us Now
+              </Button>
+            </Stack>
+          </motion.div>
         </Container>
       </Box>
 
       {/* Contact */}
       <Container maxWidth="sm" id="contact" sx={{ py: 10 }}>
-        <Box textAlign="center" mb={4}>
-          <Typography variant="h4" component="h2" fontWeight={800}>
-            Get in Touch
-          </Typography>
-          <Typography color="text.secondary">Questions about ElderSphere? Send us a message.</Typography>
-        </Box>
-        <Card sx={{ p: 3 }}>
-          <CardContent>
-            <ErrorMessage message={contactError} />
-            <Box component="form" onSubmit={handleContactSubmit}>
-              <Stack spacing={2}>
-                <TextField
-                  label="Full Name"
-                  required
-                  value={contactForm.name}
-                  onChange={(e) => setContactForm((f) => ({ ...f, name: e.target.value }))}
-                />
-                <TextField
-                  label="Email"
-                  type="email"
-                  required
-                  value={contactForm.email}
-                  onChange={(e) => setContactForm((f) => ({ ...f, email: e.target.value }))}
-                />
-                <TextField
-                  label="Phone (optional)"
-                  value={contactForm.phone}
-                  onChange={(e) => setContactForm((f) => ({ ...f, phone: e.target.value }))}
-                />
-                <TextField
-                  label="Message"
-                  required
-                  multiline
-                  minRows={4}
-                  value={contactForm.message}
-                  onChange={(e) => setContactForm((f) => ({ ...f, message: e.target.value }))}
-                />
-                <Button type="submit" variant="primary" loading={submitting}>
-                  Send Message
-                </Button>
-              </Stack>
-            </Box>
-          </CardContent>
-        </Card>
+        <motion.div {...fadeUpReveal(0)}>
+          <Box textAlign="center" mb={4}>
+            <Typography variant="h4" component="h2" fontWeight={800}>
+              Get in Touch
+            </Typography>
+            <Typography color="text.secondary">Questions about ElderSphere? Send us a message.</Typography>
+          </Box>
+        </motion.div>
+        <motion.div {...fadeUpReveal(1)}>
+          <Card sx={{ p: 3 }}>
+            <CardContent>
+              <ErrorMessage message={contactError} />
+              <Box component="form" onSubmit={handleContactSubmit}>
+                <Stack spacing={2}>
+                  <TextField
+                    label="Full Name"
+                    required
+                    value={contactForm.name}
+                    onChange={(e) => setContactForm((f) => ({ ...f, name: e.target.value }))}
+                  />
+                  <TextField
+                    label="Email"
+                    type="email"
+                    required
+                    value={contactForm.email}
+                    onChange={(e) => setContactForm((f) => ({ ...f, email: e.target.value }))}
+                  />
+                  <TextField
+                    label="Phone (optional)"
+                    value={contactForm.phone}
+                    onChange={(e) => setContactForm((f) => ({ ...f, phone: e.target.value }))}
+                  />
+                  <TextField
+                    label="Message"
+                    required
+                    multiline
+                    minRows={4}
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm((f) => ({ ...f, message: e.target.value }))}
+                  />
+                  <Button type="submit" variant="primary" loading={submitting}>
+                    Send Message
+                  </Button>
+                </Stack>
+              </Box>
+            </CardContent>
+          </Card>
+        </motion.div>
       </Container>
 
       {/* Footer */}

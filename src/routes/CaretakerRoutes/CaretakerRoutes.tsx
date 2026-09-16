@@ -9,6 +9,7 @@ const CaretakerDashboardPage = lazy(() => import("../../components/pages/Caretak
 const CaretakerMyProfilePage = lazy(() => import("../../components/pages/Caretaker/MyProfile/MyProfile.page"));
 const CaretakerBookingsPage = lazy(() => import("../../components/pages/Caretaker/Bookings/Bookings.page"));
 const CaretakerReviewsPage = lazy(() => import("../../components/pages/Caretaker/Reviews/Reviews.page"));
+const CaretakerEarningsPage = lazy(() => import("../../components/pages/Caretaker/Earnings/Earnings.page"));
 const NotificationsPage = lazy(() => import("../../components/pages/Shared/Notifications.page"));
 const MessagesPage = lazy(() => import("../../components/pages/Shared/Messages.page"));
 const AccountSettingsPage = lazy(() => import("../../components/pages/Shared/AccountSettings.page"));
@@ -26,6 +27,7 @@ const CaretakerRoutes: React.FC = () => {
           <Route path="profile" element={<CaretakerMyProfilePage />} />
           <Route path="bookings" element={<CaretakerBookingsPage />} />
           <Route path="reviews" element={<CaretakerReviewsPage />} />
+          <Route path="earnings" element={<CaretakerEarningsPage />} />
           <Route path="messages" element={<MessagesPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="settings" element={<AccountSettingsPage />} />

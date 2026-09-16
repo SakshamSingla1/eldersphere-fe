@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Grid, Card, CardContent, Typography, Stack, List, ListItem, ListItemText, Box, Alert } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import { Grid, Card, CardContent, Typography, Stack, List, ListItem, ListItemText, Box, Alert, Skeleton } from "@mui/material";
+import { ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip } from "recharts";
+import dayjs from "dayjs";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import StarIcon from "@mui/icons-material/Star";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
@@ -16,16 +19,24 @@ import { CaretakerVerificationStatusEnum } from "../../../../utils/enums";
 import { useCaretakerService, type CaretakerProfileResponse } from "../../../../services/useCaretakerService";
 import { useBookingService, type BookingResponse } from "../../../../services/useBookingService";
 import { useDashboardService, type CaretakerDashboardSummaryDTO } from "../../../../services/useDashboardService";
+import {
+  useAnalyticsService,
+  type RevenueTimeseriesPoint,
+  type WeeklyBookingsPoint,
+  type RatingTrendPoint,
+} from "../../../../services/useAnalyticsService";
 import { useAuthenticatedUser } from "../../../../hooks/useAuthenticatedUser";
 import { useCelebration } from "../../../../hooks/useCelebration";
 import { consumeChecklistCompleteMilestone, checkVerificationMilestone } from "../../../../utils/celebrations";
-import { formatDate } from "../../../../utils/helper";
+import { formatCurrency, formatDate } from "../../../../utils/helper";
 
 const CaretakerDashboardPage: React.FC = () => {
   const caretakerService = useCaretakerService();
   const bookingService = useBookingService();
   const dashboardService = useDashboardService();
+  const analyticsService = useAnalyticsService();
   const navigate = useNavigate();
+  const theme = useTheme();
   const { user } = useAuthenticatedUser();
   const celebrate = useCelebration();
 
@@ -34,6 +45,10 @@ const CaretakerDashboardPage: React.FC = () => {
   const [upcoming, setUpcoming] = useState<BookingResponse[]>([]);
   const [hasAvailability, setHasAvailability] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [earningsTrend, setEarningsTrend] = useState<RevenueTimeseriesPoint[]>([]);
+  const [bookingsTrend, setBookingsTrend] = useState<WeeklyBookingsPoint[]>([]);
+  const [ratingTrend, setRatingTrend] = useState<RatingTrendPoint[]>([]);
+  const [chartsLoading, setChartsLoading] = useState(true);
 
   useEffect(() => {
     caretakerService
@@ -53,6 +68,51 @@ const CaretakerDashboardPage: React.FC = () => {
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Fetched independently of the profile/summary load above: these are new, self-scoped
+  // analytics endpoints being built concurrently on the backend, so a missing route or
+  // shape mismatch here shouldn't block the rest of the dashboard.
+  useEffect(() => {
+    if (!profile) return;
+    Promise.all([analyticsService.getMyCaretakerEarnings(), analyticsService.getMyCaretakerBookingsRatingTrend()])
+      .then(([earnings, bookingsRating]) => {
+        setEarningsTrend(Array.isArray(earnings) ? earnings : []);
+        setBookingsTrend(Array.isArray(bookingsRating?.bookingsPerWeek) ? bookingsRating.bookingsPerWeek : []);
+        setRatingTrend(Array.isArray(bookingsRating?.ratingTrend) ? bookingsRating.ratingTrend : []);
+      })
+      .catch(() => {
+        setEarningsTrend([]);
+        setBookingsTrend([]);
+        setRatingTrend([]);
+      })
+      .finally(() => setChartsLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile]);
+
+  const earningsChartData = useMemo(
+    () =>
+      earningsTrend.map((p) => ({
+        ...p,
+        label: dayjs(p.bucketStart).isValid() ? dayjs(p.bucketStart).format("MMM YY") : p.bucketStart,
+      })),
+    [earningsTrend]
+  );
+  const bookingsTrendChartData = useMemo(
+    () =>
+      bookingsTrend.map((p) => ({
+        ...p,
+        label: dayjs(p.bucketStart).isValid() ? dayjs(p.bucketStart).format("DD MMM") : p.bucketStart,
+      })),
+    [bookingsTrend]
+  );
+  const ratingTrendChartData = useMemo(
+    () =>
+      ratingTrend.map((p) => ({
+        ...p,
+        label: dayjs(p.bucketStart).isValid() ? dayjs(p.bucketStart).format("MMM YY") : p.bucketStart,
+      })),
+    [ratingTrend]
+  );
 
   // Two of the app's celebration milestones live here: the caretaker finishing every
   // Getting Started step, and their verification flipping to VERIFIED (an admin-side
@@ -178,6 +238,110 @@ const CaretakerDashboardPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      <Grid container spacing={3} mb={3}>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card>
+            <CardContent>
+              <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+                Earnings Over Time
+              </Typography>
+              <Box sx={{ width: "100%", height: 260 }}>
+                {chartsLoading ? (
+                  <Skeleton variant="rounded" width="100%" height="100%" />
+                ) : earningsChartData.length === 0 ? (
+                  <Stack alignItems="center" justifyContent="center" sx={{ height: "100%" }} spacing={0.5}>
+                    <Typography color="text.secondary">No earnings yet.</Typography>
+                  </Stack>
+                ) : (
+                  <ResponsiveContainer>
+                    <BarChart data={earningsChartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                      <CartesianGrid stroke={theme.palette.divider} vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: theme.palette.text.secondary }} tickLine={false} axisLine={{ stroke: theme.palette.divider }} />
+                      <YAxis
+                        allowDecimals={false}
+                        tick={{ fontSize: 11, fill: theme.palette.text.secondary }}
+                        tickLine={false}
+                        axisLine={false}
+                        width={48}
+                        tickFormatter={(v) => `₹${v}`}
+                      />
+                      <RechartsTooltip
+                        formatter={(value) => formatCurrency(typeof value === "number" ? value : Number(value))}
+                        contentStyle={{ borderRadius: 10, border: `1px solid ${theme.palette.divider}`, background: theme.palette.background.paper }}
+                        labelStyle={{ color: theme.palette.text.primary, fontWeight: 700 }}
+                      />
+                      <Bar dataKey="revenue" name="Earnings" fill={theme.palette.success.main} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card>
+            <CardContent>
+              <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+                Completed Bookings per Week
+              </Typography>
+              <Box sx={{ width: "100%", height: 260 }}>
+                {chartsLoading ? (
+                  <Skeleton variant="rounded" width="100%" height="100%" />
+                ) : bookingsTrendChartData.length === 0 ? (
+                  <Stack alignItems="center" justifyContent="center" sx={{ height: "100%" }} spacing={0.5}>
+                    <Typography color="text.secondary">No completed bookings yet.</Typography>
+                  </Stack>
+                ) : (
+                  <ResponsiveContainer>
+                    <LineChart data={bookingsTrendChartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                      <CartesianGrid stroke={theme.palette.divider} vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: theme.palette.text.secondary }} tickLine={false} axisLine={{ stroke: theme.palette.divider }} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: theme.palette.text.secondary }} tickLine={false} axisLine={false} width={32} />
+                      <RechartsTooltip
+                        contentStyle={{ borderRadius: 10, border: `1px solid ${theme.palette.divider}`, background: theme.palette.background.paper }}
+                        labelStyle={{ color: theme.palette.text.primary, fontWeight: 700 }}
+                      />
+                      <Line type="monotone" dataKey="total" name="Completed" stroke={theme.palette.primary.main} strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <Card sx={{ height: "100%" }}>
+            <CardContent>
+              <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+                Rating Trend
+              </Typography>
+              <Box sx={{ width: "100%", height: 260 }}>
+                {chartsLoading ? (
+                  <Skeleton variant="rounded" width="100%" height="100%" />
+                ) : ratingTrendChartData.length > 0 ? (
+                  <ResponsiveContainer>
+                    <LineChart data={ratingTrendChartData} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+                      <CartesianGrid stroke={theme.palette.divider} vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: theme.palette.text.secondary }} tickLine={false} axisLine={{ stroke: theme.palette.divider }} />
+                      <YAxis domain={[0, 5]} tick={{ fontSize: 11, fill: theme.palette.text.secondary }} tickLine={false} axisLine={false} width={24} />
+                      <RechartsTooltip
+                        contentStyle={{ borderRadius: 10, border: `1px solid ${theme.palette.divider}`, background: theme.palette.background.paper }}
+                        labelStyle={{ color: theme.palette.text.primary, fontWeight: 700 }}
+                      />
+                      <Line type="monotone" dataKey="averageRating" name="Rating" stroke={theme.palette.warning.main} strokeWidth={2} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Stack alignItems="center" justifyContent="center" sx={{ height: "100%" }} spacing={0.5}>
+                    <Typography color="text.secondary">No reviews yet.</Typography>
+                  </Stack>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
       <Card>
         <CardContent>

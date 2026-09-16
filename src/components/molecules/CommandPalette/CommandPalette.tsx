@@ -11,6 +11,8 @@ export interface CommandPaletteProps {
   /** Same nav-item list the Sidebar renders for the current role — reused verbatim so the
    * palette can never drift out of sync with what a role can actually navigate to. */
   navItems: SidebarNavItem[];
+  open: boolean;
+  onClose: () => void;
 }
 
 // Cheap substring + subsequence "fuzzy" match — good enough for a short nav list (a dozen
@@ -33,9 +35,8 @@ function matchScore(label: string, query: string): number | null {
   return 1000 + haystack.length; // subsequence matches rank below substring matches
 }
 
-const CommandPalette: React.FC<CommandPaletteProps> = ({ navItems }) => {
+const CommandPalette: React.FC<CommandPaletteProps> = ({ navItems, open, onClose }) => {
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -49,21 +50,8 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ navItems }) => {
       .map((r) => r.item);
   }, [navItems, query]);
 
-  // Global Cmd+K / Ctrl+K — works from anywhere in the authenticated app since this
-  // component is mounted once in DashboardLayout, outside any particular page.
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setOpen(true);
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
-
   const close = () => {
-    setOpen(false);
+    onClose();
     setQuery("");
     setActiveIndex(0);
   };

@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Grid, Card, CardContent, Stack, Typography, Chip, Divider, List, ListItem, ListItemText, Box, FormControlLabel, Alert, Collapse } from "@mui/material";
-import { motion } from "framer-motion";
+import dayjs from "dayjs";
+import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
+import { PickersDay, type PickersDayProps } from "@mui/x-date-pickers/PickersDay";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
@@ -14,7 +16,6 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import Button from "../../../atoms/Button/Button";
 import Select from "../../../atoms/Select/Select";
 import TextField from "../../../atoms/TextField/TextField";
-import DatePicker from "../../../atoms/DatePicker/DatePicker";
 import Checkbox from "../../../atoms/Checkbox/Checkbox";
 import ErrorMessage from "../../../atoms/ErrorMessage/ErrorMessage";
 import FieldError from "../../../atoms/FieldError/FieldError";
@@ -22,6 +23,7 @@ import Avatar from "../../../atoms/Avatar/Avatar";
 import RatingDisplay from "../../../atoms/RatingDisplay/RatingDisplay";
 import Loader from "../../../atoms/Loader/Loader";
 import WeeklyAvailabilityView from "../../../molecules/WeeklyAvailability/WeeklyAvailabilityView";
+import AvailableSlotPicker from "../../../molecules/AvailableSlotPicker/AvailableSlotPicker";
 import { useCaretakerService, type CaretakerProfileResponse, type AvailabilitySlot } from "../../../../services/useCaretakerService";
 import { useReviewService, type ReviewResponse } from "../../../../services/useReviewService";
 import { useElderProfileService, type ElderProfileResponse } from "../../../../services/useElderProfileService";
@@ -33,8 +35,38 @@ import { useSnackbar } from "../../../../contexts/SnackbarContext";
 import { useAuthenticatedUser } from "../../../../hooks/useAuthenticatedUser";
 import { useCelebration } from "../../../../hooks/useCelebration";
 import { consumeFirstBookingMilestone } from "../../../../utils/celebrations";
-import { ServiceCategoryLabels } from "../../../../utils/enums";
-import { formatCurrency, formatDateTime, getErrorMessage, getErrorCode } from "../../../../utils/helper";
+import { ServiceCategoryLabels, DayOfWeekEnum } from "../../../../utils/enums";
+import { formatCurrency, getErrorMessage, getErrorCode } from "../../../../utils/helper";
+
+// dayjs' Date#day() is 0 (Sunday) - 6 (Saturday); this maps that index straight onto the
+// backend's DayOfWeekEnum so a calendar day can be checked against the caretaker's
+// declared weekly availability without any date-library gymnastics.
+const DAY_INDEX_TO_ENUM: DayOfWeekEnum[] = [
+  DayOfWeekEnum.SUNDAY,
+  DayOfWeekEnum.MONDAY,
+  DayOfWeekEnum.TUESDAY,
+  DayOfWeekEnum.WEDNESDAY,
+  DayOfWeekEnum.THURSDAY,
+  DayOfWeekEnum.FRIDAY,
+  DayOfWeekEnum.SATURDAY,
+];
+
+interface AvailabilityPickersDayProps extends PickersDayProps {
+  availableDaySet?: Set<DayOfWeekEnum>;
+}
+
+const AvailabilityDay: React.FC<AvailabilityPickersDayProps> = (props) => {
+  const { availableDaySet, day, outsideCurrentMonth, ...other } = props;
+  const isAvailableDay = !outsideCurrentMonth && Boolean(availableDaySet?.has(DAY_INDEX_TO_ENUM[dayjs(day).day()]));
+  return (
+    <PickersDay
+      {...other}
+      day={day}
+      outsideCurrentMonth={outsideCurrentMonth}
+      sx={isAvailableDay ? { bgcolor: "action.selected", fontWeight: 700 } : undefined}
+    />
+  );
+};
 
 const MIN_OCCURRENCES = 2;
 const MAX_OCCURRENCES = 12;
@@ -60,6 +92,7 @@ const CaretakerProfileViewPage: React.FC = () => {
   const [elders, setElders] = useState<ElderProfileResponse[]>([]);
   const [services, setServices] = useState<ServiceOfferingResponse[]>([]);
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
+  const availableDaySet = useMemo(() => new Set(availability.map((s) => s.dayOfWeek)), [availability]);
   const [loading, setLoading] = useState(true);
   const [messaging, setMessaging] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
@@ -436,19 +469,43 @@ const CaretakerProfileViewPage: React.FC = () => {
                   <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.6 }}>
                     When
                   </Typography>
-                  <DatePicker
-                    label="Date"
-                    required
-                    value={form.scheduledDate}
-                    onChange={(newValue) => setForm((f) => ({ ...f, scheduledDate: newValue }))}
-                  />
-                  <DatePicker
-                    label="Time"
-                    type="time"
-                    required
-                    value={form.scheduledTime}
-                    onChange={(newValue) => setForm((f) => ({ ...f, scheduledTime: newValue }))}
-                  />
+                  {!form.serviceId ? (
+                    <Typography variant="body2" color="text.secondary">
+                      Pick a service above to see this caretaker's availability.
+                    </Typography>
+                  ) : (
+                    <>
+                      <Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: "10px" }}>
+                        <DateCalendar
+                          value={form.scheduledDate ? dayjs(form.scheduledDate, "YYYY-MM-DD") : null}
+                          onChange={(newValue) =>
+                            setForm((f) => ({
+                              ...f,
+                              scheduledDate: newValue && newValue.isValid() ? newValue.format("YYYY-MM-DD") : "",
+                              scheduledTime: "",
+                            }))
+                          }
+                          disablePast
+                          slots={{ day: AvailabilityDay }}
+                          slotProps={{ day: { availableDaySet } as any }}
+                        />
+                      </Box>
+                      {availableDaySet.size === 0 && (
+                        <Typography variant="caption" color="text.secondary">
+                          This caretaker hasn't set specific hours yet — showing default full-day availability.
+                        </Typography>
+                      )}
+                      {form.scheduledDate && (
+                        <AvailableSlotPicker
+                          caretakerId={caretakerId}
+                          serviceId={form.serviceId}
+                          date={form.scheduledDate}
+                          selectedTime={form.scheduledTime}
+                          onSelect={(startTime) => setForm((f) => ({ ...f, scheduledTime: startTime }))}
+                        />
+                      )}
+                    </>
+                  )}
                 </Stack>
 
                 <Divider />

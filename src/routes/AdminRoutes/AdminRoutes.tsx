@@ -17,6 +17,7 @@ const AdminCaretakerVerificationPage = lazy(() => import("../../components/pages
 const AdminElderProfilesPage = lazy(() => import("../../components/pages/Admin/ElderProfiles.page"));
 const AdminServicesPage = lazy(() => import("../../components/pages/Admin/Services.page"));
 const AdminBookingsPage = lazy(() => import("../../components/pages/Admin/Bookings.page"));
+const AdminPaymentsPage = lazy(() => import("../../components/pages/Admin/Payments.page"));
 const AdminMedicalRecordsPage = lazy(() => import("../../components/pages/Admin/MedicalRecords.page"));
 const AdminReviewsPage = lazy(() => import("../../components/pages/Admin/Reviews.page"));
 const AdminEmergencyAlertsPage = lazy(() => import("../../components/pages/Admin/EmergencyAlerts.page"));
@@ -26,6 +27,7 @@ const AdminContactUsPage = lazy(() => import("../../components/pages/Admin/Conta
 const AdminRolesPermissionsPage = lazy(() => import("../../components/pages/Admin/RolesPermissions.page"));
 const AdminPlatformSettingsPage = lazy(() => import("../../components/pages/Admin/PlatformSettings.page"));
 const AdminNavLinksPage = lazy(() => import("../../components/pages/Admin/NavLinks.page"));
+const AdminMessagesPage = lazy(() => import("../../components/pages/Admin/Messages.page"));
 const AccountSettingsPage = lazy(() => import("../../components/pages/Shared/AccountSettings.page"));
 
 // Add/Edit form PAGES for the CrudModule-based listings above — each its own lazy chunk,
@@ -81,6 +83,7 @@ const AdminRoutes: React.FC = () => {
           <Route path="services/:id/edit" element={<AdminServiceFormPage />} />
           <Route path="bookings" element={<AdminBookingsPage />} />
           <Route path="bookings/:id/edit" element={<AdminBookingFormPage />} />
+          <Route path="payments" element={<AdminPaymentsPage />} />
           <Route path="medical-records" element={<AdminMedicalRecordsPage />} />
           <Route path="medical-records/:id/edit" element={<AdminMedicalRecordFormPage />} />
           <Route path="reviews" element={<AdminReviewsPage />} />
@@ -160,6 +163,7 @@ const AdminRoutes: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          <Route path="messages" element={<AdminMessagesPage />} />
           <Route path="settings" element={<AccountSettingsPage />} />
           <Route path="*" element={<Navigate to="dashboard" replace />} />
         </Route>

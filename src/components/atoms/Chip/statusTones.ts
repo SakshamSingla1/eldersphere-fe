@@ -15,6 +15,14 @@ export const BOOKING_STATUS_TONE: Record<string, StatusTone> = {
   CANCELLED: "error",
 };
 
+/** Payment.status: PENDING | SUCCEEDED | FAILED | REFUNDED */
+export const PAYMENT_STATUS_TONE: Record<string, StatusTone> = {
+  PENDING: "warning",
+  SUCCEEDED: "success",
+  FAILED: "error",
+  REFUNDED: "default",
+};
+
 /** EmergencyAlert.status: TRIGGERED | ACKNOWLEDGED | RESOLVED */
 export const EMERGENCY_ALERT_STATUS_TONE: Record<string, StatusTone> = {
   TRIGGERED: "error",

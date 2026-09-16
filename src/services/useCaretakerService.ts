@@ -10,6 +10,7 @@ const CARETAKER_URLS = {
   VERIFICATION: "/caretakers/:id/verification",
   MY_AVAILABILITY: "/caretakers/me/availability",
   AVAILABILITY_BY_ID: "/caretakers/:id/availability",
+  AVAILABLE_SLOTS_BY_ID: "/caretakers/:id/available-slots",
   MY_VERIFICATION_DOCUMENTS: "/caretakers/me/verification-documents",
   VERIFICATION_DOCUMENTS_BY_ID: "/caretakers/:id/verification-documents",
 };
@@ -24,6 +25,19 @@ export interface AvailabilitySlot {
 export interface CaretakerAvailabilityResponse {
   caretakerId: number;
   slots: AvailabilitySlot[];
+}
+
+export interface AvailableSlot {
+  startTime: string; // "HH:mm:ss"
+  endTime: string;
+  available: boolean;
+}
+
+export interface CaretakerAvailableSlotsResponse {
+  caretakerId: number;
+  date: string;
+  usingDefaultHours: boolean;
+  slots: AvailableSlot[];
 }
 
 export interface CaretakerProfileResponse extends AuditableResponse {
@@ -81,6 +95,13 @@ export const useCaretakerService = () => {
         request<CaretakerAvailabilityResponse>("PUT", CARETAKER_URLS.MY_AVAILABILITY, { slots }),
       getAvailability: (id: number) =>
         request<CaretakerAvailabilityResponse>("GET", replaceUrlParams(CARETAKER_URLS.AVAILABILITY_BY_ID, { id })),
+      getAvailableSlots: (id: string | number, date: string, serviceId: string | number) =>
+        request<CaretakerAvailableSlotsResponse>(
+          "GET",
+          replaceUrlParams(CARETAKER_URLS.AVAILABLE_SLOTS_BY_ID, { id }),
+          null,
+          { params: { date, serviceId } }
+        ),
       uploadVerificationDocument: (file: File) => {
         const formData = new FormData();
         formData.append("file", file);

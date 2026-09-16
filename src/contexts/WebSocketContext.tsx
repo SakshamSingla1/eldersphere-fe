@@ -16,11 +16,14 @@ interface WebSocketContextValue {
   connected: boolean;
   /** Subscribe to a STOMP topic; returns an unsubscribe function. No-ops (and returns a no-op) while disconnected. */
   subscribe: (destination: string, callback: SubscribeCallback) => () => void;
+  /** Publish to an app destination (e.g. /app/conversations/{id}/typing). No-ops while disconnected. */
+  publish: (destination: string, body: unknown) => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextValue>({
   connected: false,
   subscribe: () => () => {},
+  publish: () => {},
 });
 
 // App-wide STOMP-over-SockJS connection, live for the lifetime of an authenticated
@@ -80,6 +83,11 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           }
           sub = null;
         };
+      },
+      publish: (destination, body) => {
+        const client = clientRef.current;
+        if (!client || !client.connected) return;
+        client.publish({ destination, body: JSON.stringify(body) });
       },
     }),
     [connected]

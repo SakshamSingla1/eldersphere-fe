@@ -52,6 +52,14 @@ export const BookingStatusEnum = {
 } as const;
 export type BookingStatusEnum = (typeof BookingStatusEnum)[keyof typeof BookingStatusEnum];
 
+export const PaymentStatusEnum = {
+  PENDING: "PENDING",
+  SUCCEEDED: "SUCCEEDED",
+  FAILED: "FAILED",
+  REFUNDED: "REFUNDED",
+} as const;
+export type PaymentStatusEnum = (typeof PaymentStatusEnum)[keyof typeof PaymentStatusEnum];
+
 export const CaretakerVerificationStatusEnum = {
   PENDING: "PENDING",
   VERIFIED: "VERIFIED",

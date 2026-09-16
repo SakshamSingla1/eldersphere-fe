@@ -30,6 +30,8 @@ export interface MessageResponse {
   content: string;
   sentAt: string;
   readAt?: string | null;
+  fileAssetId?: number | null;
+  fileUrl?: string | null;
 }
 
 export const useMessagingService = () => {
@@ -41,12 +43,18 @@ export const useMessagingService = () => {
         request<PageResponse<ConversationResponse>>("GET", MESSAGING_URLS.CONVERSATIONS, null, {
           params: { page, size, sort: "lastMessageAt,desc" },
         }),
-      getMessages: (conversationId: number, page = 0, size = 50) =>
+      // `beforeId` (a message id) fetches the page immediately preceding that message,
+      // still oldest-first within the page — used for "load older messages"; omit it for
+      // the initial (most recent) page.
+      getMessages: (conversationId: number, options?: { beforeId?: number; size?: number }) =>
         request<PageResponse<MessageResponse>>("GET", replaceUrlParams(MESSAGING_URLS.MESSAGES, { id: conversationId }), null, {
-          params: { page, size },
+          params: { beforeId: options?.beforeId, size: options?.size ?? 50 },
         }),
-      sendMessage: (conversationId: number, content: string) =>
-        request<MessageResponse>("POST", replaceUrlParams(MESSAGING_URLS.MESSAGES, { id: conversationId }), { content }),
+      sendMessage: (conversationId: number, content: string, fileAssetId?: number) =>
+        request<MessageResponse>("POST", replaceUrlParams(MESSAGING_URLS.MESSAGES, { id: conversationId }), {
+          content,
+          fileAssetId,
+        }),
       markRead: (conversationId: number) =>
         request<string>("PUT", replaceUrlParams(MESSAGING_URLS.READ, { id: conversationId })),
     }),

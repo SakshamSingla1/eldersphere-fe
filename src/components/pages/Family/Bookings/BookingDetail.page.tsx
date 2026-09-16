@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Card, CardContent, Stack, Typography, Divider, Chip, Alert } from "@mui/material";
+import { Card, CardContent, Stack, Typography, Divider, Chip, Alert, Tooltip } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EventNoteIcon from "@mui/icons-material/EventNote";
+import PaymentIcon from "@mui/icons-material/Payment";
 import PrintIcon from "@mui/icons-material/Print";
 import RepeatIcon from "@mui/icons-material/Repeat";
 import VideoCallIcon from "@mui/icons-material/VideoCall";
@@ -11,12 +12,17 @@ import ConfirmableButton from "../../../atoms/ConfirmableButton/ConfirmableButto
 import Loader from "../../../atoms/Loader/Loader";
 import ErrorMessage from "../../../atoms/ErrorMessage/ErrorMessage";
 import StatusChip from "../../../atoms/Chip/StatusChip";
-import { BOOKING_STATUS_TONE } from "../../../atoms/Chip/statusTones";
+import { BOOKING_STATUS_TONE, PAYMENT_STATUS_TONE } from "../../../atoms/Chip/statusTones";
 import PageHeader from "../../../molecules/PageHeader/PageHeader";
 import KeyValueGrid from "../../../molecules/KeyValueGrid/KeyValueGrid";
+import CheckoutPaymentForm from "../../../molecules/Payment/CheckoutPaymentForm";
 import { useBookingService, type BookingResponse } from "../../../../services/useBookingService";
+import { usePaymentService, type PaymentResponse } from "../../../../services/usePaymentService";
 import { useSnackbar } from "../../../../contexts/SnackbarContext";
-import { BookingStatusEnum } from "../../../../utils/enums";
+import { useCelebration } from "../../../../hooks/useCelebration";
+import { checkBookingConfirmedMilestone } from "../../../../utils/celebrations";
+import { BookingStatusEnum, PaymentStatusEnum } from "../../../../utils/enums";
+import { isStripeConfigured } from "../../../../utils/stripeClient";
 import { formatCurrency, formatDate, getErrorMessage, getVideoCallLink } from "../../../../utils/helper";
 
 const CANCELLABLE: string[] = [BookingStatusEnum.PENDING, BookingStatusEnum.CONFIRMED];
@@ -27,12 +33,20 @@ const BookingDetailPage: React.FC = () => {
   const bookingId = Number(id);
   const navigate = useNavigate();
   const { showSnackbar } = useSnackbar();
+  const celebrate = useCelebration();
   const bookingService = useBookingService();
+  const paymentService = usePaymentService();
 
   const [booking, setBooking] = useState<BookingResponse | null>(null);
   const [series, setSeries] = useState<BookingResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [payment, setPayment] = useState<PaymentResponse | null>(null);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [creatingIntent, setCreatingIntent] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -40,6 +54,9 @@ const BookingDetailPage: React.FC = () => {
     try {
       const b = await bookingService.getById(bookingId);
       setBooking(b);
+      if (checkBookingConfirmedMilestone(bookingId, b.status)) {
+        celebrate("Your booking is confirmed!");
+      }
       if (b.recurringGroupId) {
         const s = await bookingService.getRecurringSeries(b.recurringGroupId);
         setSeries(s);
@@ -54,9 +71,52 @@ const BookingDetailPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId]);
 
+  const loadPayment = useCallback(async () => {
+    try {
+      const p = await paymentService.getByBooking(bookingId);
+      setPayment(p ?? null);
+    } catch {
+      // No payment yet for this booking — that's a normal, expected state, not an error.
+      setPayment(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookingId]);
+
   useEffect(() => {
-    if (bookingId) load();
-  }, [bookingId, load]);
+    if (bookingId) {
+      load();
+      loadPayment();
+    }
+  }, [bookingId, load, loadPayment]);
+
+  const paymentDue = Boolean(booking) && booking!.status === BookingStatusEnum.CONFIRMED && payment?.status !== PaymentStatusEnum.SUCCEEDED;
+
+  const handleStartCheckout = async () => {
+    if (creatingIntent) return;
+    if (showCheckout) {
+      setShowCheckout(false);
+      return;
+    }
+    setShowCheckout(true);
+    setCheckoutError(null);
+    if (clientSecret) return;
+    setCreatingIntent(true);
+    try {
+      const intent = await paymentService.createIntent(bookingId);
+      setClientSecret(intent.clientSecret);
+    } catch (err) {
+      setCheckoutError(getErrorMessage(err, "Could not start checkout for this booking"));
+    } finally {
+      setCreatingIntent(false);
+    }
+  };
+
+  const handlePaymentSuccess = () => {
+    celebrate("Payment successful! Your booking is all set.");
+    setShowCheckout(false);
+    setClientSecret(null);
+    loadPayment();
+  };
 
   const handleCancel = async () => {
     if (!booking) return;
@@ -117,6 +177,10 @@ const BookingDetailPage: React.FC = () => {
               { label: "Date", value: formatDate(booking.scheduledDate) },
               { label: "Time", value: booking.scheduledTime },
               { label: "Cost", value: formatCurrency(booking.cost) },
+              {
+                label: "Payment",
+                value: payment ? <StatusChip label={payment.status} tone={PAYMENT_STATUS_TONE[payment.status]} /> : "Not started",
+              },
             ]}
           />
 
@@ -173,6 +237,20 @@ const BookingDetailPage: React.FC = () => {
             Start Video Call
           </Button>
         )}
+        {paymentDue &&
+          (isStripeConfigured ? (
+            <Button variant="primary" startIcon={<PaymentIcon />} loading={creatingIntent} onClick={handleStartCheckout}>
+              {showCheckout ? "Hide Payment" : "Pay Now"}
+            </Button>
+          ) : (
+            <Tooltip title="Online payments aren't configured yet. Please contact support to complete payment.">
+              <span>
+                <Button variant="primary" startIcon={<PaymentIcon />} disabled>
+                  Pay Now
+                </Button>
+              </span>
+            </Tooltip>
+          ))}
         {CANCELLABLE.includes(booking.status) && (
           <ConfirmableButton
             variant="danger"
@@ -198,6 +276,23 @@ const BookingDetailPage: React.FC = () => {
           </ConfirmableButton>
         )}
       </Stack>
+
+      {showCheckout && paymentDue && isStripeConfigured && (
+        <Card className="no-print" sx={{ mt: 2, p: { xs: 2, sm: 3 } }}>
+          <CardContent>
+            <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+              Complete Payment
+            </Typography>
+            {checkoutError ? (
+              <Alert severity="error">{checkoutError}</Alert>
+            ) : clientSecret ? (
+              <CheckoutPaymentForm clientSecret={clientSecret} onSuccess={handlePaymentSuccess} />
+            ) : (
+              <Loader minHeight={120} />
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

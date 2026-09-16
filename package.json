@@ -19,6 +19,8 @@
     "@mui/x-date-pickers": "^8.8.0",
     "@sentry/react": "^10.74.0",
     "@stomp/stompjs": "^7.3.0",
+    "@stripe/react-stripe-js": "^2.9.0",
+    "@stripe/stripe-js": "^4.10.0",
     "axios": "^1.10.0",
     "canvas-confetti": "^1.9.4",
     "dayjs": "^1.11.13",
