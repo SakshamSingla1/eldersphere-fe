@@ -33,7 +33,7 @@ import {
   type ConversationResponse,
   type MessageResponse,
 } from "../../../services/useMessagingService";
-import { useFileService } from "../../../services/useFileService";
+import { useFileService, ALLOWED_UPLOAD_ACCEPT } from "../../../services/useFileService";
 import { usePresenceService } from "../../../services/usePresenceService";
 import { useWebSocket } from "../../../contexts/WebSocketContext";
 import { useAuthenticatedUser } from "../../../hooks/useAuthenticatedUser";
@@ -568,6 +568,7 @@ const MessagesPage: React.FC = () => {
                     <input
                       type="file"
                       hidden
+                      accept={ALLOWED_UPLOAD_ACCEPT}
                       onChange={(e) => {
                         handleAttach(e.target.files?.[0]);
                         e.target.value = "";

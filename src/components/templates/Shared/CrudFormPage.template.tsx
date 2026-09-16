@@ -15,7 +15,7 @@ import FieldError from "../../atoms/FieldError/FieldError";
 import AddressAutocomplete from "../../molecules/AddressAutocomplete/AddressAutocomplete";
 import CaretakerSearchAutocomplete from "../../molecules/CaretakerSearchAutocomplete/CaretakerSearchAutocomplete";
 import { useSnackbar } from "../../../contexts/SnackbarContext";
-import { useFileService } from "../../../services/useFileService";
+import { useFileService, ALLOWED_UPLOAD_ACCEPT } from "../../../services/useFileService";
 import { getErrorMessage } from "../../../utils/helper";
 import type { ResourceTypeEnum } from "../../../utils/enums";
 
@@ -224,6 +224,7 @@ function CrudFormPage<T>({
               <input
                 type="file"
                 hidden
+                accept={ALLOWED_UPLOAD_ACCEPT}
                 onChange={(e) => handleFileSelected(field, e.target.files?.[0])}
               />
             </Button>
