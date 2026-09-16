@@ -214,7 +214,7 @@ const CaretakerDashboardPage: React.FC = () => {
 
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
             <Typography variant="h6" fontWeight={700}>
               Upcoming Bookings
             </Typography>

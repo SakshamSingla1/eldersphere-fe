@@ -134,7 +134,7 @@ const ElderDashboardPage: React.FC = () => {
         <Grid size={{ xs: 12, md: 8 }}>
           <Card>
             <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
                 <Typography variant="h6" fontWeight={700}>
                   Recent Medical Records
                 </Typography>

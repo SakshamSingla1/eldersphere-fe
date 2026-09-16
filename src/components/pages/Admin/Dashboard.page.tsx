@@ -99,7 +99,7 @@ const AdminDashboardPage: React.FC = () => {
         <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
                 <Typography variant="subtitle1" fontWeight={700}>
                   Bookings (Last 30 Days)
                 </Typography>
@@ -135,7 +135,7 @@ const AdminDashboardPage: React.FC = () => {
         <Grid size={{ xs: 12, md: 6 }}>
           <Card>
             <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
                 <Typography variant="subtitle1" fontWeight={700}>
                   Revenue (Last 30 Days)
                 </Typography>

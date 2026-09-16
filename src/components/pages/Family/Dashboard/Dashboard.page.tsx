@@ -163,7 +163,7 @@ const FamilyDashboardPage: React.FC = () => {
       {summary.pendingInvites.length > 0 && (
         <Card sx={{ mb: 3, borderLeft: "4px solid", borderColor: "warning.main" }}>
           <CardContent>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
               <Stack direction="row" spacing={1} alignItems="center">
                 <MailOutlineIcon color="warning" />
                 <Typography variant="h6" fontWeight={700}>
@@ -227,7 +227,7 @@ const FamilyDashboardPage: React.FC = () => {
         <Grid size={{ xs: 12, md: 8 }}>
           <Card>
             <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
                 <Typography variant="h6" fontWeight={700}>
                   Upcoming Bookings
                 </Typography>
