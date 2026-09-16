@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { AppBar, Toolbar, Typography, Box, Menu, MenuItem, Divider, IconButton, Tooltip, useMediaQuery, CircularProgress } from "@mui/material";
+import { AppBar, Toolbar, Typography, Box, Menu, MenuItem, Divider, IconButton, Tooltip, useMediaQuery, CircularProgress, Chip } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import MenuIcon from "@mui/icons-material/Menu";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -21,7 +21,16 @@ import { homePathForUser } from "../../../routes/ProtectedRoute";
 import { USER_TYPE_LABEL, type UserTypeEnum } from "../../../utils/enums";
 import { getErrorMessage } from "../../../utils/helper";
 
-const Topbar: React.FC<{ settingsPath: string; onMenuClick?: () => void }> = ({ settingsPath, onMenuClick }) => {
+const Topbar: React.FC<{
+  settingsPath: string;
+  onMenuClick?: () => void;
+  onOpenCommandPalette?: () => void;
+  /** Current desktop sidebar width (full or collapsed-rail) — see DashboardLayout, which
+   * owns the collapsed/expanded state and keeps this in sync with the Sidebar itself so the
+   * two never drift out of alignment. Ignored below `md`, where the Sidebar is an overlay
+   * that doesn't reserve any layout width. */
+  sidebarWidth?: number;
+}> = ({ settingsPath, onMenuClick, onOpenCommandPalette, sidebarWidth = SIDEBAR_WIDTH }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -82,8 +91,9 @@ const Topbar: React.FC<{ settingsPath: string; onMenuClick?: () => void }> = ({ 
       color="inherit"
       elevation={0}
       sx={{
-        width: { xs: "100%", md: `calc(100% - ${SIDEBAR_WIDTH}px)` },
-        ml: { xs: 0, md: `${SIDEBAR_WIDTH}px` },
+        width: { xs: "100%", md: `calc(100% - ${sidebarWidth}px)` },
+        ml: { xs: 0, md: `${sidebarWidth}px` },
+        transition: (t) => t.transitions.create(["width", "margin"], { easing: t.transitions.easing.sharp, duration: t.transitions.duration.shorter }),
         borderBottom: "1px solid",
         borderColor: "divider",
         backgroundColor: "background.paper",
@@ -142,6 +152,20 @@ const Topbar: React.FC<{ settingsPath: string; onMenuClick?: () => void }> = ({ 
                 ))}
               </Menu>
             </>
+          )}
+          {/* Desktop only, same reasoning as the role switcher above — a 375px-wide mobile
+              toolbar has no room for a discoverability hint on top of its other controls. */}
+          {!isMobile && (
+            <Tooltip title="Quick navigation">
+              <Chip
+                label="⌘K"
+                size="small"
+                variant="outlined"
+                onClick={onOpenCommandPalette}
+                aria-label="Open quick navigation (Cmd+K)"
+                sx={{ fontWeight: 700, letterSpacing: 0.3, cursor: "pointer" }}
+              />
+            </Tooltip>
           )}
           <Tooltip title={mode === "light" ? "Switch to dark mode" : "Switch to light mode"}>
             <IconButton onClick={toggleMode} aria-label="Toggle color mode">

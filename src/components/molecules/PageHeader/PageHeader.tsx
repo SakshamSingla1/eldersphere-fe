@@ -29,7 +29,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ icon, title, subtitle, onBack, 
         {backLabel}
       </Button>
     )}
-    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={2} mb={2}>
+    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={2} mb={2.5}>
       <Stack direction="row" spacing={subtitle ? 1.5 : 1} alignItems="center">
         {icon}
         <div>

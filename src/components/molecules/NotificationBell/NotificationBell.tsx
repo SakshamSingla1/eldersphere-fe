@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { IconButton, Badge, Menu, MenuItem, Typography, Box, Divider, ListItemText } from "@mui/material";
+import { IconButton, Badge, Menu, MenuItem, Typography, Box, Divider, ListItemText, Chip } from "@mui/material";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import { useNavigate } from "react-router-dom";
 import { useNotificationService, type NotificationResponseDTO } from "../../../services/useNotificationService";
@@ -83,33 +83,57 @@ const NotificationBell: React.FC = () => {
           <NotificationsIcon />
         </Badge>
       </IconButton>
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose} PaperProps={{ sx: { width: 340 } }}>
-        <Box px={2} py={1}>
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+        PaperProps={{ sx: { width: 368, maxHeight: 440 } }}
+      >
+        <Box px={2.25} py={1.5} display="flex" alignItems="center" gap={1}>
           <Typography variant="subtitle2" fontWeight={700}>
             Notifications
           </Typography>
+          {unreadCount > 0 && <Chip label={unreadCount > 99 ? "99+" : unreadCount} size="small" color="primary" sx={{ height: 20, fontSize: 11 }} />}
         </Box>
         <Divider />
         {notifications.length === 0 ? (
-          <MenuItem disabled>
-            <ListItemText primary="You're all caught up" />
+          <MenuItem disabled sx={{ py: 3, justifyContent: "center" }}>
+            <ListItemText primary="You're all caught up" sx={{ textAlign: "center", color: "text.secondary" }} />
           </MenuItem>
         ) : (
-          notifications.map((n) => (
-            <MenuItem key={n.id} onClick={() => handleNotificationClick(n)} sx={{ whiteSpace: "normal" }}>
+          notifications.map((n, idx) => (
+            <MenuItem
+              key={n.id}
+              onClick={() => handleNotificationClick(n)}
+              sx={{
+                whiteSpace: "normal",
+                alignItems: "flex-start",
+                gap: 1,
+                py: 1.5,
+                px: 2.25,
+                borderBottom: idx < notifications.length - 1 ? "1px solid" : "none",
+                borderColor: "divider",
+              }}
+            >
+              {/* Unread indicator dot — sits in its own fixed-width column so read and
+                  unread rows still align their title text at the same left edge. */}
+              <Box sx={{ width: 8, pt: 0.75, flexShrink: 0 }}>
+                {!n.isRead && <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "primary.main" }} />}
+              </Box>
               <ListItemText
                 primary={n.title}
                 secondary={
                   <>
-                    <Typography component="span" variant="body2" color="text.secondary" display="block">
+                    <Typography component="span" variant="body2" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
                       {n.message}
                     </Typography>
-                    <Typography component="span" variant="caption" color="text.disabled">
+                    <Typography component="span" variant="caption" color="text.disabled" display="block" sx={{ mt: 0.5 }}>
                       {formatDateTime(n.createdAt)}
                     </Typography>
                   </>
                 }
                 primaryTypographyProps={{ fontWeight: n.isRead ? 400 : 700 }}
+                sx={{ my: 0 }}
               />
             </MenuItem>
           ))

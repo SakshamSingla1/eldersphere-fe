@@ -354,7 +354,11 @@ function CrudFormPage<T>({
         onBack={handleCancel}
         backLabel={`Back to ${plural}`}
       />
-      <Card sx={{ p: { xs: 2, sm: 3 } }}>
+      {/* No extra padding here — CardContent already carries the app-wide 22px inset (see
+          theme.ts's MuiCardContent override); adding padding on the Card too would double
+          it up into an oversized ~46px gutter, out of step with every other card-based
+          template in the app. */}
+      <Card>
         <CardContent>
           {loadingRecord ? (
             <FormFieldsSkeleton count={Math.max(3, visibleFields.length)} />
